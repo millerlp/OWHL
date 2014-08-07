@@ -1,4 +1,4 @@
-/* Sleep_tests27
+/* OWHL.ino
  * 
         v27 Changing some pin assignments to suit the new OWHL PCB discs.
         
@@ -128,14 +128,6 @@ DS3231 32kHz ---(XTAL1 / TOSC1)  PB6  |9       20|  AVCC
   main loop's if() statement should execute, including reading the
   time, reading the MS5803 sensor, printing those values to the
   serial port, and then going to sleep via the goToSleep function.
-
-  In the goToSleep function you'll see two bitSet(PINB,1)
-  operations before and after the actual sleep. This toggles
-  the output of PB1 (Arduino digital pin 9, physical pin 15 on the
-  AVR 28-pin DIP), which lets you see the
-  duration of the sleep vs. wake cycles with an oscilloscope.
-  bitSet(PINB,1) is the equivalent of Arduino's
-  digitalWrite(9, !digitalRead(9)), but much faster.
   
   Change the STARTMINUTE and DATADURATION values in the preamble
   below to set when the unit should wake up and start taking 
@@ -163,8 +155,11 @@ DS3231 32kHz ---(XTAL1 / TOSC1)  PB6  |9       20|  AVCC
 #include <wiring_private.h>
 #include <avr/wdt.h>
 
-#define LED 6 // Arduino pin D6
-#define ERRLED 5 // Arduino pin D5
+
+#define ERRLED 5 // Arduino pin D5, AVR pin PD5
+#define LED 6 	  // Arduino pin D6, AVR pin PD6
+#define BUZZER 7 // Arduino pin D7, AVR pin PD7
+#define REEDSW 3 // Arduino pin D3, AVR pin PD3, aka interrupt 1
 
 #define ECHO_TO_SERIAL 0 // echo data to serial port, set to 0 to turn off
 
@@ -182,6 +177,8 @@ byte fracSecArray[SAMPLES_PER_SECOND]; // store fracSec values temporarily
 float pressureArray[SAMPLES_PER_SECOND]; // store pressure readings temporarily
 float tempCArray[SAMPLES_PER_SECOND]; // store temperature readings temporarily
 byte loopCount = 0; // counter to keep track of data sampling loops
+
+byte heartBeatCount = 0; // counter to keep track of heartbeat loops
 
 byte precision = 2; // decimal precision for stored pressure data values
 char pressBuffer [10]; // character buffer to hold string-converted pressure
@@ -201,7 +198,7 @@ DateTime newtime; // used to track time
 uint8_t oldday; // used to track when a new day starts
 
 RTC_DS3231 RTC;
-MS_5803 sensor = MS_5803(512);
+MS_5803 sensor = MS_5803(512); // the argument to MS_5803 sets the precision (256,512,1024,4096)
 SdFat sd;
 SdFile logfile;  // for sd card, this is the file object to be written to
 
@@ -215,8 +212,14 @@ void setup() {
 	// Set indicator LED as output
 	pinMode(LED, OUTPUT);
 	pinMode(ERRLED, OUTPUT);
-	// Set interrupt 0 (physical pin 2) as input, use internal pullup resistor
+	// Set interrupt 0 (Arduino pin D2) as input, use internal pullup resistor
+	// interrupt 0 is used to put the unit into permanent sleep, stopping sampling
 	pinMode(2, INPUT_PULLUP);
+	
+	// Set interrupt 1 (Arduino pin D3) as input, use internal pullup resistor
+	// interrupt 1 is used to activate the heartbeat function that notifies the 
+	// user if the unit is taking data.
+	pinMode(3, INPUT_PULLUP);
 
 #if ECHO_TO_SERIAL
 	Serial.begin(57600);
@@ -242,7 +245,7 @@ void setup() {
         // Check to see if DS3231 RTC is running
         if (! RTC.isrunning()) {
           //Serial.println("RTC is NOT running!");
-          // following line sets the RTC to the date & time this sketch was compiled
+          // The following line sets the RTC to the date & time this sketch was compiled
           RTC.adjust(DateTime(__DATE__, __TIME__));
           // -----------------------
           // Notify the user via the LEDs. Error LED should go on,
@@ -257,7 +260,8 @@ void setup() {
           digitalWrite(ERRLED, LOW); // turn error led back off
           //------------------------
         }
-        // Check to see if DS3231 RTC time is behind
+        // Assuming the DS3231 RTC is running, 
+		// now check to see if DS3231 RTC time is behind
         DateTime now = RTC.now();
         DateTime compiled = DateTime(__DATE__, __TIME__);
         if (now.unixtime() < compiled.unixtime()) {
@@ -278,6 +282,7 @@ void setup() {
         }
 
 	RTC.enable32kHz(false); // Stop 32.768kHz output from Chronodot
+	
 	// The Chronodot can also put out several different square waves
 	// on its SQW pin (1024, 4096, 8192 Hz), though I don't use them
 	// in this sketch. The code below disables the SQW output to make
@@ -421,8 +426,6 @@ void loop() {
 			if (loopCount >= (SAMPLES_PER_SECOND - 1)) {
 				// Check to see if a new day has started. If so, open a new file
 				// with the initFileName() function
-				// TODO: this check may not be necessary any more if we're splitting
-				// files up hourly
 				if (oldtime.day() != oldday) {
 					// Generate a new output filename based on the new date
 					initFileName(oldtime);
@@ -606,7 +609,7 @@ void loop() {
 
 //-----------------------------------------------------------------------------
 // This Interrupt Service Routine (ISR) is called every time the
-// TIMER2_OVF_vect goes high (=1), which happens when TIMER2
+// TIMER2_OVF_vect goes high (==1), which happens when TIMER2
 // overflows. The ISR doesn't care if the AVR is awake or
 // in SLEEP_MODE_PWR_SAVE, it will still roll over and run this
 // routine. If the AVR is in SLEEP_MODE_PWR_SAVE, the TIMER2
@@ -615,11 +618,11 @@ ISR(TIMER2_OVF_vect) {
 	if (f_wdt == 0) { // if flag is 0 when interrupt is called
 		f_wdt = 1; // set the flag to 1
 	} else {
-#if ECHO_TO_SERIAL
-		Serial.print(F("TIMER2 fired, but it's "));
-		Serial.println(f_wdt);
-		delay(40);
-#endif
+// #if ECHO_TO_SERIAL
+		// Serial.print(F("TIMER2 fired, but it's "));
+		// Serial.println(f_wdt);
+		// delay(40);
+// #endif
 	}
 }
 
@@ -772,10 +775,11 @@ DateTime startTIMER2(bool start32k, DateTime currTime){
 	// clobbering the EXCLK bit that might already be set. This tells 
 	// TIMER2 to take its clock signal from XTAL1/2
 	TCCR2A = 0; //override arduino settings, ensure WGM mode 0 (normal mode)
+	
 	// Set up TCCR2B register (Timer Counter Control Register 2 B) to use the 
 	// desired prescaler on the external 32.768kHz clock signal. Depending on 
 	// which bits you set high among CS22, CS21, and CS20, different 
-	// prescalers will be used. See Table 18-9 on page 158 of the AVR 
+	// prescalers will be used. See Table 18-9 on page 158 of the AVR 328P 
 	// datasheet.
 	//  TCCR2B = 0;  // No clock source (Timer/Counter2 stopped)
 	// no prescaler -- TCNT2 will overflow once every 0.007813 seconds (128Hz)
@@ -972,7 +976,7 @@ void endRun ()
 	// cancel sleep as a precaution
 	sleep_disable();
 	// must do this as the pin will probably stay low for a while
-	detachInterrupt (0);
+	detachInterrupt(0);
 	interrupts(); // reenable global interrupts (including TIMER0 for millis)
 
 	// Turn off the RTC's 32.768kHz clock signal if it's not already off
