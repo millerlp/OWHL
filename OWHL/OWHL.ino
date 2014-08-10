@@ -1,5 +1,9 @@
 /* OWHL.ino
  * 
+	TODO: the tone() function currently breaks everything because it uses 
+	TIMER2, which screws up the 32.768kHz clock interrupt. I need to move
+	the tone generation functions to use TIMER1 since it should be available. 
+ 
    v27 Changing some pin assignments to suit the new OWHL PCB discs.
         
 	v26 Putting code back in to allow different sampling rates besides 4Hz. 
@@ -149,6 +153,7 @@ DS3231 32kHz ---(XTAL1 / TOSC1)  PB6  |9       20|  AVCC
 #include <MS5803_14.h>
 #include <SdFat.h>
 
+
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
 #include <util/atomic.h>
@@ -156,10 +161,12 @@ DS3231 32kHz ---(XTAL1 / TOSC1)  PB6  |9       20|  AVCC
 #include <avr/wdt.h>
 
 
+
+#define REEDSW 3 // Arduino pin D3, AVR pin PD3, aka INT1
 #define ERRLED 5 // Arduino pin D5, AVR pin PD5
 #define LED 6 	  // Arduino pin D6, AVR pin PD6
 #define BUZZER 7 // Arduino pin D7, AVR pin PD7
-#define REEDSW 3 // Arduino pin D3, AVR pin PD3, aka interrupt 1
+
 
 #define ECHO_TO_SERIAL 0 // echo data to serial port, set to 0 to turn off
 
@@ -178,6 +185,7 @@ float pressureArray[SAMPLES_PER_SECOND]; // store pressure readings temporarily
 float tempCArray[SAMPLES_PER_SECOND]; // store temperature readings temporarily
 byte loopCount = 0; // counter to keep track of data sampling loops
 
+byte heartBeatFlag = 0; // flag to keep track of heartbeat interrupt status
 byte heartBeatCount = 0; // counter to keep track of heartbeat loops
 
 byte precision = 2; // decimal precision for stored pressure data values
@@ -220,6 +228,14 @@ void setup() {
 	// interrupt 1 is used to activate the heartbeat function that notifies the 
 	// user if the unit is taking data.
 	pinMode(3, INPUT_PULLUP);
+	
+	// Set Buzzer pin as output
+	pinMode(BUZZER, OUTPUT);
+	
+	tone(7,4000); // sound buzzer as well
+    delay(10);
+    noTone(7);
+	
 
 #if ECHO_TO_SERIAL
 	Serial.begin(57600);
@@ -309,9 +325,9 @@ void setup() {
                         digitalWrite(LED, HIGH);
                         delay(100);
                         digitalWrite(LED, LOW);
-//                        tone(7,4000);
-//                        delay(50);
-//                        noTone(7);
+                       tone(7,4000); // sound buzzer as well
+                       delay(100);
+                       noTone(7);
 		}
 	}
 #if ECHO_TO_SERIAL
@@ -330,7 +346,14 @@ void setup() {
 	
 	// Start MS5803 pressure sensor
 	sensor.initializeMS_5803();
-
+	
+	//-------------------------------------------------------
+	// Create interrupt for INT1 (should be reed switch)
+	// The heartBeat interrupt service routine is defined below
+	// the main loop
+	attachInterrupt(1, heartBeatInterrupt, LOW);
+	// heartBeatFlag = 1;
+	
 	//--------------------------------------------------------
 	// Check current time, branch the rest of the setup loop
 	// depending on whether it's time to take data or 
@@ -437,6 +460,14 @@ void loop() {
 				// Call the writeToSD function to output the data array contents
 				// to the SD card
 				writeToSD();
+				
+				// If the heartbeat flag is currently set true, activate the buzzer and/or LED
+				// to notify the user that a write to SD just occurred.
+				
+				if (heartBeatFlag) {
+					heartBeat(); // call the heartBeat function
+				}
+				
 #if ECHO_TO_SERIAL
 				if (newtime.second() % 10 == 0){
 					printTimeSerial(newtime, fracSec);
@@ -486,6 +517,9 @@ void loop() {
 					delay(40);
 				}
 #endif 
+				if (heartBeatFlag) {
+					heartBeat(); // call the heartBeat function
+				}
 				// Since it is the wakeMinute, we'll idle in the 
 				// goToSleep cycle (returning f_wdt = 1 on interrupt from
 				// TIMER2) until the minute rolls over to start recording
@@ -500,6 +534,9 @@ void loop() {
 				Serial.println(F("Going to deep sleep"));
 				delay(40);
 #endif 
+				if (heartBeatFlag) {
+					heartBeat(); // call the heartBeat function
+				}
 				TIMSK2 = 0; // stop TIMER2 interrupts
 				// Turn off the RTC's 32.768kHz clock signal
 				RTC.enable32kHz(false);
@@ -518,6 +555,9 @@ void loop() {
 			Serial.println(F("Going to deep sleep, outer f_wdt = 1"));
 			delay(40);
 #endif
+				if (heartBeatFlag) {
+					heartBeat(); // call the heartBeat function
+				}
 			TIMSK2 = 0; // stop TIMER2 interrupts
 			// If we are past endMinute, enter lowPowerSleep (shuts off TIMER2)
 			// Turn off the RTC's 32.768kHz clock signal
@@ -542,7 +582,10 @@ void loop() {
 					Serial.println(F("Wake minute, goToSleep"));
 					delay(40);
 				}
-#endif 
+#endif
+				if (heartBeatFlag) {
+					heartBeat(); // call the heartBeat function
+				}			
 			goToSleep();
 			
 		} // end of if(f_wdt == 1) statement
@@ -572,6 +615,10 @@ void loop() {
 			digitalWrite(LED, HIGH);
 			delay(3);
 			digitalWrite(LED, LOW);
+			
+				if (heartBeatFlag) {
+					heartBeat(); // call the heartBeat function
+				}			
 			// If it is not yet the wakeMinute, just go back to 
 			// low power sleep mode
 			lowPowerSleep();
@@ -584,6 +631,9 @@ void loop() {
 			Serial.println(F("Restarting TIMER2, return to goToSleep mode"));
 			delay(40);
 #endif
+				if (heartBeatFlag) {
+					heartBeat(); // call the heartBeat function
+				}
 			// If it is the wakeMinute, restart TIMER2
 			newtime = startTIMER2(true,newtime);
 			// Start a new file 
@@ -617,13 +667,7 @@ void loop() {
 ISR(TIMER2_OVF_vect) {
 	if (f_wdt == 0) { // if flag is 0 when interrupt is called
 		f_wdt = 1; // set the flag to 1
-	} else {
-// #if ECHO_TO_SERIAL
-		// Serial.print(F("TIMER2 fired, but it's "));
-		// Serial.println(f_wdt);
-		// delay(40);
-// #endif
-	}
+	} 
 }
 
 
@@ -826,7 +870,7 @@ DateTime startTIMER2(bool start32k, DateTime currTime){
 // data arrays and writes them to the SD card file in a
 // comma-separated value format.
 void writeToSD (void) {
-	bitSet(PIND, 6); // Toggle LED for monitoring
+	// bitSet(PIND, 6); // Toggle LED for monitoring
 //	bitSet(PIND, 7); // Toggle Arduino pin 7 for oscilloscope monitoring
 	
 	// Reopen logfile. If opening fails, notify the user
@@ -871,7 +915,6 @@ void writeToSD (void) {
 		dtostrf(pressureArray[i], precision+3, precision, pressBuffer);
 		// Then print the value to the logfile. 
 		logfile.print(pressBuffer);
-		// logfile.print(pressureArray[i], DEC);
 		logfile.print(F(","));
 		
 		// Write out temperature in Celsius
@@ -879,7 +922,6 @@ void writeToSD (void) {
 		// a string, truncating at 2 digits of precision
 		dtostrf(tempCArray[i], precision+3, precision, tempBuffer);
 		logfile.println(tempBuffer);
-		// logfile.println(tempCArray[i], DEC);
 		logfile.sync(); // flush all data to SD card
 	}
 	  DateTime t1 = DateTime(unixtimeArray[0]);
@@ -889,7 +931,7 @@ void writeToSD (void) {
 	  }
 	logfile.close(); // close file again
 //	bitSet(PIND, 7); // Toggle Arduino pin 7 for oscilloscope monitoring
-	bitSet(PIND, 6); // Toggle LED for monitoring
+	// bitSet(PIND, 6); // Toggle LED for monitoring
 }
 
 //------------------------------------------------------------------------------
@@ -1009,6 +1051,45 @@ void endRun ()
 		f_wdt = 0; // reset flag each time through
 	}
 }  // end of endRun
+
+
+//-----------------------------------------------------------------------------
+// Interrupt Service Routine for INT1 (should be a reed switch)
+// This function sets the global heartBeatFlag true, which will trigger actions
+// in the main loop to notify the user that the datalogging is still happening.
+void heartBeatInterrupt() {
+	// If the interrupt is triggered, set the flag to 1 (true)
+	heartBeatFlag = 1;
+	// Immediately detach the interrupt on INT1 so that it doesn't 
+	// trigger repeatedly. 
+	detachInterrupt(1);
+}
+
+//-------------------------------------------------------------------
+// heartBeat function. This function plays a tone on the buzzer attached
+// to Arduino pin 7 and flashes the LED to notify the user that datalogging
+// is still happening, or will happen again on schedule. 
+
+void heartBeat(void){
+				if (heartBeatCount < 10){
+						digitalWrite(LED, HIGH); // also flash LED
+						// delay(5);
+						// Play tone on Arduino pin 7 (PB7)
+					   tone(BUZZER,4000); // Play tone
+                       delay(10);
+                       noTone(BUZZER); // turn off tone
+					   digitalWrite(LED, LOW); // turn off LED
+					   heartBeatCount = heartBeatCount++; // increment counter
+				} else {
+					// If the heartbeat has executed 10 times, shut if off,
+					// reactivate the heartbeat interrupt, and reset the counter
+					heartBeatFlag = 0;
+					attachInterrupt(1, heartBeatInterrupt, LOW);
+					heartBeatCount = 0;
+				}
+				heartBeatCount; // return value
+}
+
 
 //------------------------------------------------------------------------------
 // printTimeSerial function
