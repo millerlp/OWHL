@@ -1,6 +1,6 @@
 /* OWHL.ino
  * 
-        v27 Changing some pin assignments to suit the new OWHL PCB discs.
+   v27 Changing some pin assignments to suit the new OWHL PCB discs.
         
 	v26 Putting code back in to allow different sampling rates besides 4Hz. 
 	Change the value of SAMPLES_PER_SECOND in the preamble to 4, 2 or 1 as
@@ -625,6 +625,8 @@ ISR(TIMER2_OVF_vect) {
 // #endif
 	}
 }
+
+
 
 //-----------------------------------------------------------------------------
 // goToSleep function. When called, this puts the AVR to
