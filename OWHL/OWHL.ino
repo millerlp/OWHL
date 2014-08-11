@@ -188,6 +188,16 @@ byte loopCount = 0; // counter to keep track of data sampling loops
 byte heartBeatFlag = 0; // flag to keep track of heartbeat interrupt status
 byte heartBeatCount = 0; // counter to keep track of heartbeat loops
 
+//-------------------------------------------------
+// Buzzer frequency (Hz) and duration (milliseconds). 
+unsigned int frequency = 2000;
+unsigned long duration = 50;
+// Additional global variables used by the buzzer function
+volatile long timer1_toggle_count;
+volatile uint8_t *timer1_pin_port;
+volatile uint8_t timer1_pin_mask;
+//------------------------------------------------
+
 byte precision = 2; // decimal precision for stored pressure data values
 char pressBuffer [10]; // character buffer to hold string-converted pressure
 char tempBuffer [7]; // character buffer to hold string-converted temperature
@@ -231,10 +241,7 @@ void setup() {
 	
 	// Set Buzzer pin as output
 	pinMode(BUZZER, OUTPUT);
-	
-	tone(7,4000); // sound buzzer as well
-    delay(10);
-    noTone(7);
+	beepbuzzer();
 	
 
 #if ECHO_TO_SERIAL
@@ -325,9 +332,7 @@ void setup() {
                         digitalWrite(LED, HIGH);
                         delay(100);
                         digitalWrite(LED, LOW);
-                       tone(7,4000); // sound buzzer as well
-                       delay(100);
-                       noTone(7);
+						beepbuzzer();
 		}
 	}
 #if ECHO_TO_SERIAL
@@ -428,7 +433,13 @@ void loop() {
 				oldtime = newtime; // update oldtime
 				loopCount = 0; // reset loopCount
 			}
-
+			
+			if (fracSec == 0) {
+					if (heartBeatFlag) {
+					heartBeat(); // call the heartBeat function
+				}
+			}
+			
 			// Save current time to unixtimeArray
 			unixtimeArray[loopCount] = newtime.unixtime();
 			fracSecArray[loopCount] = fracSec;
@@ -464,9 +475,7 @@ void loop() {
 				// If the heartbeat flag is currently set true, activate the buzzer and/or LED
 				// to notify the user that a write to SD just occurred.
 				
-				if (heartBeatFlag) {
-					heartBeat(); // call the heartBeat function
-				}
+
 				
 #if ECHO_TO_SERIAL
 				if (newtime.second() % 10 == 0){
@@ -1072,12 +1081,10 @@ void heartBeatInterrupt() {
 
 void heartBeat(void){
 				if (heartBeatCount < 10){
+						beepbuzzer();
 						digitalWrite(LED, HIGH); // also flash LED
-						// delay(5);
 						// Play tone on Arduino pin 7 (PB7)
-					   tone(BUZZER,4000); // Play tone
-                       delay(10);
-                       noTone(BUZZER); // turn off tone
+					   delay(5);
 					   digitalWrite(LED, LOW); // turn off LED
 					   heartBeatCount = heartBeatCount++; // increment counter
 				} else {
@@ -1117,6 +1124,90 @@ void printTimeSerial(DateTime newtime, byte fracSec){
 }
 
 
+//-------------------------------------------------------------------------
+// Function beepbuzzer()
+// This function uses TIMER1 to toggle the BUZZER pin to drive a piezo 
+// buzzer. The frequency and duration of the noise are defined as global
+// variables at the top of the program. This function exists in place of
+// the normal Arduino tone() function because tone() uses TIMER2, which 
+// interferes with the 32.768kHz timer used to clock the data logging. 
+void beepbuzzer(void){
+	uint8_t prescalarbits = 0b001;
+	long toggle_count = 0;
+	uint32_t ocr = 0;
+	int8_t _pin = BUZZER;
+
+	
+	// Reset the 16 bit TIMER1 Timer/Counter Control Register A
+    TCCR1A = 0;
+	// Reset the 16 bit TIMER1 Timer/Counter Control Register B
+    TCCR1B = 0;
+	// Enable Clear Timer on Compare match mode by setting the bit WGM12 to 
+	// 1 in TCCR1B
+    bitWrite(TCCR1B, WGM12, 1);
+	// Set the Clock Select bit 10 to 1, which sets no prescaling
+    bitWrite(TCCR1B, CS10, 1);
+	// Establish which pin will be used to run the buzzer so that we
+	// can do direct port manipulation (which is fastest). 
+    timer1_pin_port = portOutputRegister(digitalPinToPort(_pin));
+    timer1_pin_mask = digitalPinToBitMask(_pin);
+	
+	
+    // two choices for the 16 bit timers: ck/1 or ck/64
+    ocr = F_CPU / frequency / 2 - 1;
+	
+	prescalarbits = 0b001; // 0b001 equals no prescalar 
+      if (ocr > 0xffff)
+      {
+        ocr = F_CPU / frequency / 2 / 64 - 1;
+        prescalarbits = 0b011; // 0b011 equal ck/64 prescalar
+      }
+
+	// For TCCR1B, zero out any of the upper 5 bits using AND that aren't already 
+	// set to 1, and then do an OR with the prescalarbits to set any of the
+	// lower three bits to 1 wherever prescalarbits holds a 1 (0b001).
+    TCCR1B = (TCCR1B & 0b11111000) | prescalarbits;
+
+	// Calculate the toggle count
+    if (duration > 0)
+    {
+      toggle_count = 2 * frequency * duration / 1000;
+    }
+	
+	// Set the OCR for the given timer,
+    // set the toggle count,
+    // then turn on the interrupts
+    OCR1A = ocr; // Store the match value (ocr) that will trigger a TIMER1 interrupt
+    timer1_toggle_count = toggle_count;
+    bitWrite(TIMSK1, OCIE1A, 1); // Set OCEIE1A bit in TIMSK1 to 1.
+	// At this point, TIMER1 should now be actively counting clock pulses, and
+	// throwing an interrupt every time the count equals the value of ocr stored
+	// in OCR1A above. The actual toggling of the pin to make noise happens in the 
+	// TIMER1_COMPA_vect interrupt service routine. 
+
+}
+
+//-----------------------------------------------------
+// Interrupt service routine for TIMER1 counter compare match
+// This should be toggling the buzzer pin to make a beep sound
+ISR(TIMER1_COMPA_vect)
+{
+  if (timer1_toggle_count != 0)
+  {
+    // toggle the pin
+    *timer1_pin_port ^= timer1_pin_mask;
+
+    if (timer1_toggle_count > 0)
+      timer1_toggle_count--;
+  }
+  else
+  {
+	// Set Output Compare A Match Interrupt Enable (OCIE1A) bit to zero
+	// in the TIMSK1 (Timer/Counter1 Interrupt Mask Register)
+    bitWrite(TIMSK1, OCIE1A, 0); 
+    *timer1_pin_port &= ~(timer1_pin_mask);  // keep pin low after stop
+  }
+}
 
 //---------------------------------------------------------------------------
 // freeRam function. Used to report back on the current available RAM while
