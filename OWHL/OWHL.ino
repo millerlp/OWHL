@@ -190,8 +190,8 @@ byte heartBeatCount = 0; // counter to keep track of heartbeat loops
 
 //-------------------------------------------------
 // Buzzer frequency (Hz) and duration (milliseconds). 
-unsigned int frequency = 2000;
-unsigned long duration = 50;
+unsigned int frequency = 8000;
+unsigned long duration = 10;
 // Additional global variables used by the buzzer function
 volatile long timer1_toggle_count;
 volatile uint8_t *timer1_pin_port;
@@ -356,8 +356,8 @@ void setup() {
 	// Create interrupt for INT1 (should be reed switch)
 	// The heartBeat interrupt service routine is defined below
 	// the main loop
-	attachInterrupt(1, heartBeatInterrupt, LOW);
-	// heartBeatFlag = 1;
+	// attachInterrupt(1, heartBeatInterrupt, LOW);
+	heartBeatFlag = 1; // Immediately beep on start up.
 	
 	//--------------------------------------------------------
 	// Check current time, branch the rest of the setup loop
@@ -1203,7 +1203,8 @@ ISR(TIMER1_COMPA_vect)
   else
   {
 	// Set Output Compare A Match Interrupt Enable (OCIE1A) bit to zero
-	// in the TIMSK1 (Timer/Counter1 Interrupt Mask Register)
+	// in the TIMSK1 (Timer/Counter1 Interrupt Mask Register) to disable
+	// the interrupt on compare match. 
     bitWrite(TIMSK1, OCIE1A, 0); 
     *timer1_pin_port &= ~(timer1_pin_mask);  // keep pin low after stop
   }
