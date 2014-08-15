@@ -1,124 +1,14 @@
 /* OWHL.ino
  * 
-        v27 Changing some pin assignments to suit the new OWHL PCB discs.
-        
-	v26 Putting code back in to allow different sampling rates besides 4Hz. 
-	Change the value of SAMPLES_PER_SECOND in the preamble to 4, 2 or 1 as
-	desired. 
+
+	OWHL - Open Wave Height Logger
 	
-	v25 Adds code to convert the pressure and temperature floating point values 
-	into truncated character strings before writing to the SD card, in part to 
-	try speeding up write times, but also because the extra digits of precision 
-	currently being transmitted are bogus anyways. 
- 
-	v24 Trying to make periodic sampling regime functional. This version will
-	only generate 1 file per day, and simply append new samples to the end of
-	the daily file during each sampling interval (usually 30 minute periods). 
-	Change the values of STARTMINUTE and DATADURATION below to change the start
-	time and length of data taking period. STARTMINUTE can be set from 0 to 59
-	and DATADURATION can be from 1 to 60.
-	This version is set to use the DS3231 Chronodot's 32.768kHz output to run
-	TIMER2. During lowPowerSleep (when not taking data), this version will 
-	briefly flash the LED on D9 to indicate when it has awakened and returned
-	to sleep.
- 
- * v23 Trying to implement a periodic sampling regime that starts at a 
- * user-designated time and continues for some number of minutes, then goes 
- * into a deep watchdog-timed sleep for the remainder of the hour. But for some
- * reason the sketch isn't properly waking from the 8s sleep when it finishes
- * the data-taking cycle. It does sleep 8s cycles fine BEFORE the data taking
- * but not after. Very strange. 
- * 
-  v22 Added code to update the file creation date and modify date so that
-  it makes some sense. Writing 1 second's worth of data to the SD card
-  takes about 120ms based on timing this sketch, in large part because 
-  there are a lot of values being streamed to the card. 
-
-  v21 Changed the end of the setup loop slightly so that TIMER2 doesn't
-  start running until the real time clock has started a new second.
-  With the f_wdt flag set to 1 initially, the main loop should immediately
-  take a data reading (as if it is at the 0 ms mark).
-  This is an attempt to better sync the 32.768 watch crystal with the timing
-  of the real time clock. v20 was dropping 1 second of data every once in
-  a while, probably because the two clocks were out of sync.
-
-  v20 Change from built-in SD library to the SdFat library.
-  https://code.google.com/p/sdfatlib/downloads/list <-- sdfatlib20131225.zip
-  Fixing the write-to-SD interval at 1 second (4 samples) since the write
-  time scales linearly with the buffer size, so there is no gain from increasing
-  the time between SD writes.
-  Moved all filename initialization code to the function initFileName so that
-  it can be called from anywhere in the program to generate a new filename
-  based on the current date.
-  Added code to keep track of day (oldday) and generate a new filename when
-  the new date is different from the day stored in oldday. This should start
-  a new output file every night at midnight.
-
-  v19 Implement a file naming scheme based on date + time from Chronodot
-  DS3231 real time clock. Filenames will follow the pattern YYMMDDXX.CSV
-  where the XX is a counter (0 - 99) for files generated on the same day.
-  It also adds a 2nd indicator LED to Arduino
-  pin D8 (PINB0, physical pin 14) to indicate when the card initialization
-  fails.
-
-  v18 Switched to new MS5803_05/14 style library for pressure sensor. These
-  new libraries correctly carry out the pressure calculations without
-  variable overflows.
-
-  v17 This sketch implements a button on pin 2 (interrupt 0) to stop the
-  data logging process (see the function endRun). Once stopped, the
-  watchdog timer is set to 8 second timeouts, and the LED is flashed
-  briefly to indicate that data logging has stopped and the processor
-  is sleeping. This version also implements a set of data storage
-  arrays so that writes to the SD card only happen once per second.
-
-  Hardware:
-  ATMEGA328P on a breadboard, with bootloader set to run on internal
-  8MHz oscillator. LED on pins D8 + D9. Powered from a 3V3 regulator.
-
-                                       +---\/---+                      10k ohm
-    GND---BUTTON--------(RESET)  PC6  |1       28|  PC5  (ADC5 / SCL) --/\/\-- +3V3
-                          (RXD)  PD0  |2       27|  PC4  (ADC4 / SDA) --/\/\-- +3V3
-                          (TXD)  PD1  |3       26|  PC3  (ADC3)         10k ohm
-    GND---BUTTON---------(INT0)  PD2  |4       25|  PC2  (ADC2)
-                         (INT1)  PD3  |5       24|  PC1  (ADC1)
-                     (XCK / T0)  PD4  |6       23|  PC0  (ADC0)
-                  +3.3V -------  VCC  |7       22|  GND
-                                 GND  |8       21|  AREF
-DS3231 32kHz ---(XTAL1 / TOSC1)  PB6  |9       20|  AVCC
-                (XTAL2 / TOSC2)  PB7  |10      19|  PB5  (SCK) --- CLK on SD Card
-                           (T1)  PD5  |11      18|  PB4  (MISO) --- D0 on SD Card
-                         (AIN0)  PD6  |12      17|  PB3  (MOSI / OC2) --- DI on SD Card
-                         (AIN1)  PD7  |13      16|  PB2  (SS / OC1B) --- CS on SD Card
- GND --/\/\--- LED ------(ICP1)  PB0  |14      15|  PB1  (OC1A)  --- LED --/\/\-- GND
-       560ohm                          +--------+                          560ohm
-
-
-  Programmed via AVR MKII ISP.
-
-  Communicating via FTDI Friend at 57600 bps.
-
-  Chronodot DS3231 hooked up via I2C to pins A4 + A5 (SDA + SCL), along
-  with 10k ohm pull-up resistors to 3V3.
-  Chronodot DS3231 32.768kHz output pin hooked to XTAL1, with 10kOhm
-  pull-up resistor to +Vcc.
-
-  MS5803 pressure sensor hooked up via I2C:
-               --------------
-   SCL     ---|1   MS5803   8|--- NC
-   GND     ---|2            7|--- SDA
-   +3V3    ---|3            6|--- +3V3
-   NC      ---|4            5|--- +3V3
-               --------------
-  (NC = no connection)
   -------------------------------------------------------------------
   The sketch:
-  During setup, we enable the Chronodot's 32.768kHz 
-  output (as of v24, instead of using a separate 32.768kHz crystal 
-  oscillator) hooked to XTAL1
-  to provide the timed interrupt. The Chronodot 32kHz pin should be
-  connected to XTAL1, with a 10kOhm pull-up resistor 
-  between XTAL1 and +Vcc (3.3V). 
+  During setup, we enable the DS3231 RTC's 32.768kHz output hooked to 
+  XTAL1 to provide a timed interrupt on TIMER2. 
+  The DS3231 32kHz pin should be connected to XTAL1, with a 10kOhm 
+  pull-up resistor between XTAL1 and +Vcc (3.3V). 
 
   We set the prescaler on TIMER2 so that it only interrupts
   every 0.25 second (or change the value of SAMPLES_PER_SECOND in 
@@ -140,6 +30,11 @@ DS3231 32kHz ---(XTAL1 / TOSC1)  PB6  |9       20|  AVCC
   When not recording, the sketch goes into a lower power 
   sleep (lowPowerSleep) mode using the watchdog timer set 
   to 8 second timeouts to conserve power further.
+  
+  If a buzzer is present on AVR pin PD7 and a (reed) switch
+  is present on pin PD3, the sketch will beep the buzzer 10 
+  times and flash the LED to indicate that the logger is alive
+  while running. 
 
  */
 #include <SPI.h>
@@ -149,6 +44,7 @@ DS3231 32kHz ---(XTAL1 / TOSC1)  PB6  |9       20|  AVCC
 #include <MS5803_14.h>
 #include <SdFat.h>
 
+
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
 #include <util/atomic.h>
@@ -156,10 +52,12 @@ DS3231 32kHz ---(XTAL1 / TOSC1)  PB6  |9       20|  AVCC
 #include <avr/wdt.h>
 
 
+
+#define REEDSW 3 // Arduino pin D3, AVR pin PD3, aka INT1
 #define ERRLED 5 // Arduino pin D5, AVR pin PD5
 #define LED 6 	  // Arduino pin D6, AVR pin PD6
 #define BUZZER 7 // Arduino pin D7, AVR pin PD7
-#define REEDSW 3 // Arduino pin D3, AVR pin PD3, aka interrupt 1
+
 
 #define ECHO_TO_SERIAL 0 // echo data to serial port, set to 0 to turn off
 
@@ -178,7 +76,18 @@ float pressureArray[SAMPLES_PER_SECOND]; // store pressure readings temporarily
 float tempCArray[SAMPLES_PER_SECOND]; // store temperature readings temporarily
 byte loopCount = 0; // counter to keep track of data sampling loops
 
+byte heartBeatFlag = 0; // flag to keep track of heartbeat interrupt status
 byte heartBeatCount = 0; // counter to keep track of heartbeat loops
+
+//-------------------------------------------------
+// Buzzer frequency (Hz) and duration (milliseconds). 
+unsigned int frequency = 8000;
+unsigned long duration = 12;
+// Additional global variables used by the buzzer function
+volatile long timer1_toggle_count;
+volatile uint8_t *timer1_pin_port;
+volatile uint8_t timer1_pin_mask;
+//------------------------------------------------
 
 byte precision = 2; // decimal precision for stored pressure data values
 char pressBuffer [10]; // character buffer to hold string-converted pressure
@@ -220,6 +129,11 @@ void setup() {
 	// interrupt 1 is used to activate the heartbeat function that notifies the 
 	// user if the unit is taking data.
 	pinMode(3, INPUT_PULLUP);
+	
+	// Set Buzzer pin as output
+	pinMode(BUZZER, OUTPUT);
+	beepbuzzer();
+	
 
 #if ECHO_TO_SERIAL
 	Serial.begin(57600);
@@ -309,9 +223,7 @@ void setup() {
                         digitalWrite(LED, HIGH);
                         delay(100);
                         digitalWrite(LED, LOW);
-//                        tone(7,4000);
-//                        delay(50);
-//                        noTone(7);
+						beepbuzzer();
 		}
 	}
 #if ECHO_TO_SERIAL
@@ -330,7 +242,14 @@ void setup() {
 	
 	// Start MS5803 pressure sensor
 	sensor.initializeMS_5803();
-
+	
+	//-------------------------------------------------------
+	// Create interrupt for INT1 (should be reed switch)
+	// The heartBeat interrupt service routine is defined below
+	// the main loop
+	// attachInterrupt(1, heartBeatInterrupt, LOW);
+	heartBeatFlag = 1; // Immediately beep on start up.
+	
 	//--------------------------------------------------------
 	// Check current time, branch the rest of the setup loop
 	// depending on whether it's time to take data or 
@@ -405,7 +324,13 @@ void loop() {
 				oldtime = newtime; // update oldtime
 				loopCount = 0; // reset loopCount
 			}
-
+			
+			if (fracSec == 0) {
+					if (heartBeatFlag) {
+					heartBeat(); // call the heartBeat function
+				}
+			}
+			
 			// Save current time to unixtimeArray
 			unixtimeArray[loopCount] = newtime.unixtime();
 			fracSecArray[loopCount] = fracSec;
@@ -437,6 +362,12 @@ void loop() {
 				// Call the writeToSD function to output the data array contents
 				// to the SD card
 				writeToSD();
+				
+				// If the heartbeat flag is currently set true, activate the buzzer and/or LED
+				// to notify the user that a write to SD just occurred.
+				
+
+				
 #if ECHO_TO_SERIAL
 				if (newtime.second() % 10 == 0){
 					printTimeSerial(newtime, fracSec);
@@ -486,6 +417,9 @@ void loop() {
 					delay(40);
 				}
 #endif 
+				if (heartBeatFlag) {
+					heartBeat(); // call the heartBeat function
+				}
 				// Since it is the wakeMinute, we'll idle in the 
 				// goToSleep cycle (returning f_wdt = 1 on interrupt from
 				// TIMER2) until the minute rolls over to start recording
@@ -500,6 +434,9 @@ void loop() {
 				Serial.println(F("Going to deep sleep"));
 				delay(40);
 #endif 
+				if (heartBeatFlag) {
+					heartBeat(); // call the heartBeat function
+				}
 				TIMSK2 = 0; // stop TIMER2 interrupts
 				// Turn off the RTC's 32.768kHz clock signal
 				RTC.enable32kHz(false);
@@ -518,6 +455,10 @@ void loop() {
 			Serial.println(F("Going to deep sleep, outer f_wdt = 1"));
 			delay(40);
 #endif
+			if (heartBeatFlag) {
+				heartBeat(); // call the heartBeat function
+			}
+			
 			TIMSK2 = 0; // stop TIMER2 interrupts
 			// If we are past endMinute, enter lowPowerSleep (shuts off TIMER2)
 			// Turn off the RTC's 32.768kHz clock signal
@@ -542,7 +483,10 @@ void loop() {
 					Serial.println(F("Wake minute, goToSleep"));
 					delay(40);
 				}
-#endif 
+#endif
+				if (heartBeatFlag) {
+					heartBeat(); // call the heartBeat function
+				}			
 			goToSleep();
 			
 		} // end of if(f_wdt == 1) statement
@@ -572,6 +516,10 @@ void loop() {
 			digitalWrite(LED, HIGH);
 			delay(3);
 			digitalWrite(LED, LOW);
+			
+			if (heartBeatFlag) {
+				heartBeat(); // call the heartBeat function
+			}			
 			// If it is not yet the wakeMinute, just go back to 
 			// low power sleep mode
 			lowPowerSleep();
@@ -584,6 +532,10 @@ void loop() {
 			Serial.println(F("Restarting TIMER2, return to goToSleep mode"));
 			delay(40);
 #endif
+			if (heartBeatFlag) {
+				heartBeat(); // call the heartBeat function
+			}
+			
 			// If it is the wakeMinute, restart TIMER2
 			newtime = startTIMER2(true,newtime);
 			// Start a new file 
@@ -617,14 +569,10 @@ void loop() {
 ISR(TIMER2_OVF_vect) {
 	if (f_wdt == 0) { // if flag is 0 when interrupt is called
 		f_wdt = 1; // set the flag to 1
-	} else {
-// #if ECHO_TO_SERIAL
-		// Serial.print(F("TIMER2 fired, but it's "));
-		// Serial.println(f_wdt);
-		// delay(40);
-// #endif
-	}
+	} 
 }
+
+
 
 //-----------------------------------------------------------------------------
 // goToSleep function. When called, this puts the AVR to
@@ -824,7 +772,7 @@ DateTime startTIMER2(bool start32k, DateTime currTime){
 // data arrays and writes them to the SD card file in a
 // comma-separated value format.
 void writeToSD (void) {
-	bitSet(PIND, 6); // Toggle LED for monitoring
+	// bitSet(PIND, 6); // Toggle LED for monitoring
 //	bitSet(PIND, 7); // Toggle Arduino pin 7 for oscilloscope monitoring
 	
 	// Reopen logfile. If opening fails, notify the user
@@ -869,7 +817,6 @@ void writeToSD (void) {
 		dtostrf(pressureArray[i], precision+3, precision, pressBuffer);
 		// Then print the value to the logfile. 
 		logfile.print(pressBuffer);
-		// logfile.print(pressureArray[i], DEC);
 		logfile.print(F(","));
 		
 		// Write out temperature in Celsius
@@ -877,7 +824,6 @@ void writeToSD (void) {
 		// a string, truncating at 2 digits of precision
 		dtostrf(tempCArray[i], precision+3, precision, tempBuffer);
 		logfile.println(tempBuffer);
-		// logfile.println(tempCArray[i], DEC);
 		logfile.sync(); // flush all data to SD card
 	}
 	  DateTime t1 = DateTime(unixtimeArray[0]);
@@ -887,7 +833,7 @@ void writeToSD (void) {
 	  }
 	logfile.close(); // close file again
 //	bitSet(PIND, 7); // Toggle Arduino pin 7 for oscilloscope monitoring
-	bitSet(PIND, 6); // Toggle LED for monitoring
+	// bitSet(PIND, 6); // Toggle LED for monitoring
 }
 
 //------------------------------------------------------------------------------
@@ -965,7 +911,7 @@ void initFileName(DateTime time1) {
 
 //------------------------------------------------------------------------------
 // endRun function.
-// If user presses button to trigger interrupt 0 (physical pin 4, Arduino D2)
+// If user presses button to trigger interrupt 0 (AVR pin PD2, Arduino D2)
 // then stop taking data and just flash the LED once in a while while sleeping
 void endRun ()
 {
@@ -1008,6 +954,42 @@ void endRun ()
 	}
 }  // end of endRun
 
+
+//-----------------------------------------------------------------------------
+// Interrupt Service Routine for INT1 (should be a reed switch)
+// This function sets the global heartBeatFlag true, which will trigger actions
+// in the main loop to notify the user that the datalogging is still happening.
+void heartBeatInterrupt() {
+	// If the interrupt is triggered, set the flag to 1 (true)
+	heartBeatFlag = 1;
+	// Immediately detach the interrupt on INT1 so that it doesn't 
+	// trigger repeatedly. 
+	detachInterrupt(1);
+}
+
+//-------------------------------------------------------------------
+// heartBeat function. This function plays a tone on the buzzer attached
+// to AVR pin PD7 and flashes the LED to notify the user that datalogging
+// is still happening, or will happen again on schedule. 
+
+void heartBeat(void){
+				if (heartBeatCount < 10){
+						digitalWrite(LED, HIGH); // also flash LED
+						beepbuzzer(); // Play tone on Arduino pin 7 (PD7)
+					   // delay(5);
+					   digitalWrite(LED, LOW); // turn off LED
+					   heartBeatCount = heartBeatCount++; // increment counter
+				} else {
+					// If the heartbeat has executed 10 times, shut if off,
+					// reactivate the heartbeat interrupt, and reset the counter
+					heartBeatFlag = 0;
+					attachInterrupt(1, heartBeatInterrupt, LOW);
+					heartBeatCount = 0;
+				}
+				heartBeatCount; // return value
+}
+
+
 //------------------------------------------------------------------------------
 // printTimeSerial function
 // Just a function to print a formatted date and time to the serial monitor
@@ -1034,6 +1016,91 @@ void printTimeSerial(DateTime newtime, byte fracSec){
 }
 
 
+//-------------------------------------------------------------------------
+// Function beepbuzzer()
+// This function uses TIMER1 to toggle the BUZZER pin to drive a piezo 
+// buzzer. The frequency and duration of the noise are defined as global
+// variables at the top of the program. This function exists in place of
+// the normal Arduino tone() function because tone() uses TIMER2, which 
+// interferes with the 32.768kHz timer used to clock the data logging. 
+void beepbuzzer(void){
+	uint8_t prescalarbits = 0b001;
+	long toggle_count = 0;
+	uint32_t ocr = 0;
+	int8_t _pin = BUZZER;
+
+	
+	// Reset the 16 bit TIMER1 Timer/Counter Control Register A
+    TCCR1A = 0;
+	// Reset the 16 bit TIMER1 Timer/Counter Control Register B
+    TCCR1B = 0;
+	// Enable Clear Timer on Compare match mode by setting the bit WGM12 to 
+	// 1 in TCCR1B
+    bitWrite(TCCR1B, WGM12, 1);
+	// Set the Clock Select bit 10 to 1, which sets no prescaling
+    bitWrite(TCCR1B, CS10, 1);
+	// Establish which pin will be used to run the buzzer so that we
+	// can do direct port manipulation (which is fastest). 
+    timer1_pin_port = portOutputRegister(digitalPinToPort(_pin));
+    timer1_pin_mask = digitalPinToBitMask(_pin);
+	
+	
+    // two choices for the 16 bit timers: ck/1 or ck/64
+    ocr = F_CPU / frequency / 2 - 1;
+	
+	prescalarbits = 0b001; // 0b001 equals no prescalar 
+      if (ocr > 0xffff)
+      {
+        ocr = F_CPU / frequency / 2 / 64 - 1;
+        prescalarbits = 0b011; // 0b011 equal ck/64 prescalar
+      }
+
+	// For TCCR1B, zero out any of the upper 5 bits using AND that aren't already 
+	// set to 1, and then do an OR with the prescalarbits to set any of the
+	// lower three bits to 1 wherever prescalarbits holds a 1 (0b001).
+    TCCR1B = (TCCR1B & 0b11111000) | prescalarbits;
+
+	// Calculate the toggle count
+    if (duration > 0)
+    {
+      toggle_count = 2 * frequency * duration / 1000;
+    }
+	
+	// Set the OCR for the given timer,
+    // set the toggle count,
+    // then turn on the interrupts
+    OCR1A = ocr; // Store the match value (ocr) that will trigger a TIMER1 interrupt
+    timer1_toggle_count = toggle_count;
+    bitWrite(TIMSK1, OCIE1A, 1); // Set OCEIE1A bit in TIMSK1 to 1.
+	// At this point, TIMER1 should now be actively counting clock pulses, and
+	// throwing an interrupt every time the count equals the value of ocr stored
+	// in OCR1A above. The actual toggling of the pin to make noise happens in the 
+	// TIMER1_COMPA_vect interrupt service routine. 
+
+}
+
+//-----------------------------------------------------
+// Interrupt service routine for TIMER1 counter compare match
+// This should be toggling the buzzer pin to make a beep sound
+ISR(TIMER1_COMPA_vect)
+{
+  if (timer1_toggle_count != 0)
+  {
+    // toggle the pin
+    *timer1_pin_port ^= timer1_pin_mask;
+
+    if (timer1_toggle_count > 0)
+      timer1_toggle_count--;
+  }
+  else
+  {
+	// Set Output Compare A Match Interrupt Enable (OCIE1A) bit to zero
+	// in the TIMSK1 (Timer/Counter1 Interrupt Mask Register) to disable
+	// the interrupt on compare match. 
+    bitWrite(TIMSK1, OCIE1A, 0); 
+    *timer1_pin_port &= ~(timer1_pin_mask);  // keep pin low after stop
+  }
+}
 
 //---------------------------------------------------------------------------
 // freeRam function. Used to report back on the current available RAM while
@@ -1041,11 +1108,11 @@ void printTimeSerial(DateTime newtime, byte fracSec){
 // so this should return a value between 0 and 2048. If RAM drops to
 // zero you will start seeing weird behavior as bits of memory are accidentally
 // overwritten, destroying normal functioning in the process.
-int freeRam () {
-	extern int __heap_start, *__brkval;
-	int v;
-	return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
-}
+// int freeRam () {
+	// extern int __heap_start, *__brkval;
+	// int v;
+	// return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
+// }
 
 
 
