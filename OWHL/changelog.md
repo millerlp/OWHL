@@ -77,3 +77,49 @@ v27 Changing some pin assignments to suit the new OWHL PCB discs.
   arrays so that writes to the SD card only happen once per second.
   
 ```
+
+---------------
+
+Early breadboard version
+```
+  Hardware:
+  ATMEGA328P on a breadboard, with bootloader set to run on internal
+  8MHz oscillator. LED on pins D8 + D9. Powered from a 3V3 regulator.
+
+                                       +---\/---+                      10k ohm
+    GND---BUTTON--------(RESET)  PC6  |1       28|  PC5  (ADC5 / SCL) --/\/\-- +3V3
+                          (RXD)  PD0  |2       27|  PC4  (ADC4 / SDA) --/\/\-- +3V3
+                          (TXD)  PD1  |3       26|  PC3  (ADC3)         10k ohm
+    GND---BUTTON---------(INT0)  PD2  |4       25|  PC2  (ADC2)
+                         (INT1)  PD3  |5       24|  PC1  (ADC1)
+                     (XCK / T0)  PD4  |6       23|  PC0  (ADC0)
+                  +3.3V -------  VCC  |7       22|  GND
+                                 GND  |8       21|  AREF
+DS3231 32kHz ---(XTAL1 / TOSC1)  PB6  |9       20|  AVCC
+                (XTAL2 / TOSC2)  PB7  |10      19|  PB5  (SCK) --- CLK on SD Card
+                           (T1)  PD5  |11      18|  PB4  (MISO) --- D0 on SD Card
+                         (AIN0)  PD6  |12      17|  PB3  (MOSI / OC2) --- DI on SD Card
+                         (AIN1)  PD7  |13      16|  PB2  (SS / OC1B) --- CS on SD Card
+ GND --/\/\--- LED ------(ICP1)  PB0  |14      15|  PB1  (OC1A)  --- LED --/\/\-- GND
+       560ohm                          +--------+                          560ohm
+
+
+  Programmed via AVR MKII ISP.
+
+  Communicating via FTDI Friend at 57600 bps.
+
+  Chronodot DS3231 hooked up via I2C to pins A4 + A5 (SDA + SCL), along
+  with 10k ohm pull-up resistors to 3V3.
+  Chronodot DS3231 32.768kHz output pin hooked to XTAL1, with 10kOhm
+  pull-up resistor to +Vcc.
+
+  MS5803 pressure sensor hooked up via I2C:
+               --------------
+   SCL     ---|1   MS5803   8|--- NC
+   GND     ---|2            7|--- SDA
+   +3V3    ---|3            6|--- +3V3
+   NC      ---|4            5|--- +3V3
+               --------------
+  (NC = no connection)
+  
+```
