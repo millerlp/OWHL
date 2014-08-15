@@ -198,6 +198,7 @@
 <smd name="2" x="0.508" y="0" dx="0.635" dy="1.27" layer="1" cream="no"/>
 <text x="-0.9525" y="1.27" size="0.4064" layer="25">&gt;NAME</text>
 <text x="-0.9525" y="-1.651" size="0.4064" layer="27">&gt;VALUE</text>
+<rectangle x1="-0.254" y1="-0.254" x2="0.254" y2="0.254" layer="29"/>
 </package>
 <package name="JST-2-SMD-VERT">
 <description>JST B2B-PH-SM4-TM 2-pin connector&lt;br&gt;

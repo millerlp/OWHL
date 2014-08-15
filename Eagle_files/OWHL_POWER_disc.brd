@@ -22,8 +22,8 @@
 <layer number="26" name="bNames" color="7" fill="1" visible="no" active="yes"/>
 <layer number="27" name="tValues" color="7" fill="1" visible="no" active="yes"/>
 <layer number="28" name="bValues" color="7" fill="1" visible="no" active="yes"/>
-<layer number="29" name="tStop" color="7" fill="3" visible="no" active="yes"/>
-<layer number="30" name="bStop" color="7" fill="6" visible="no" active="yes"/>
+<layer number="29" name="tStop" color="7" fill="3" visible="yes" active="yes"/>
+<layer number="30" name="bStop" color="7" fill="6" visible="yes" active="yes"/>
 <layer number="31" name="tCream" color="7" fill="4" visible="no" active="yes"/>
 <layer number="32" name="bCream" color="7" fill="5" visible="no" active="yes"/>
 <layer number="33" name="tFinish" color="6" fill="3" visible="no" active="yes"/>
@@ -126,7 +126,7 @@
 <board>
 <plain>
 <circle x="18.415" y="18.415" radius="18.415" width="0.254" layer="20"/>
-<text x="8.255" y="27.051" size="1.27" layer="21" font="vector" ratio="15" rot="R90">INT1</text>
+<text x="8.255" y="27.432" size="1.27" layer="21" font="vector" ratio="15" rot="R90">INT1</text>
 <text x="3.556" y="20.828" size="1.016" layer="21" font="vector" ratio="15" rot="R180">VCC</text>
 <text x="3.556" y="18.415" size="1.27" layer="21" font="vector" ratio="15" rot="R180">TX</text>
 <text x="3.556" y="15.875" size="1.27" layer="21" font="vector" ratio="15" rot="R180">RX</text>
@@ -169,13 +169,13 @@
 <text x="3.81" y="14.859" size="1.016" layer="22" font="vector" ratio="15" rot="MR0">RX</text>
 <text x="1.27" y="14.478" size="1.016" layer="22" font="vector" ratio="15" rot="MR211.3">DTR</text>
 <text x="3.175" y="25.527" size="1.016" layer="22" font="vector" ratio="15" rot="MR270">GND</text>
-<text x="8.128" y="29.845" size="1.016" layer="22" font="vector" ratio="15" rot="MR270">INT1</text>
+<text x="8.128" y="30.734" size="1.016" layer="22" font="vector" ratio="15" rot="MR270">INT1</text>
 <text x="10.033" y="16.51" size="1.016" layer="22" font="vector" ratio="15" rot="MR270">PD6</text>
 <text x="10.541" y="19.304" size="1.016" layer="22" font="vector" ratio="15" rot="MR270">PD5</text>
 <text x="9.906" y="21.971" size="1.016" layer="22" font="vector" ratio="15" rot="MR270">PC0</text>
 <text x="10.541" y="24.765" size="1.016" layer="22" font="vector" ratio="15" rot="MR270">PC1</text>
 <text x="8.763" y="10.414" size="1.016" layer="22" font="vector" ratio="15" rot="MR0">PD7</text>
-<text x="32.893" y="26.797" size="1.016" layer="22" font="vector" ratio="15" rot="MR0">VCC</text>
+<text x="31.242" y="27.432" size="1.016" layer="22" font="vector" ratio="15" rot="MR90">VCC</text>
 <text x="35.687" y="22.352" size="1.016" layer="22" font="vector" ratio="15" rot="MR0">GND</text>
 <text x="35.941" y="19.939" size="1.016" layer="22" font="vector" ratio="15" rot="MR0">RST</text>
 <text x="35.941" y="17.399" size="1.016" layer="22" font="vector" ratio="15" rot="MR0">SCL</text>
@@ -218,8 +218,8 @@ REG</text>
 <wire x1="20.574" y1="5.588" x2="20.574" y2="4.445" width="0.254" layer="22"/>
 <text x="16.383" y="1.27" size="1.016" layer="22" font="vector" ratio="15" rot="MR0">LED2</text>
 <text x="24.257" y="1.27" size="1.016" layer="22" font="vector" ratio="15" rot="MR0">LED1</text>
-<text x="18.669" y="13.081" size="1.016" layer="22" font="vector" ratio="15" rot="MR0">BUTTON1</text>
-<text x="25.527" y="13.081" size="1.016" layer="22" font="vector" ratio="15" rot="MR0">RESET</text>
+<text x="17.78" y="13.081" size="1.016" layer="22" font="vector" ratio="15" rot="MR0">BUTTON1</text>
+<text x="26.797" y="13.081" size="1.016" layer="22" font="vector" ratio="15" rot="MR0">RESET</text>
 <text x="12.954" y="28.702" size="1.27" layer="1" font="vector" ratio="15">OWHL POWER</text>
 <text x="35.687" y="21.336" size="1.4224" layer="16" font="vector" ratio="15" rot="MR270">LPM</text>
 <text x="2.667" y="11.684" size="1.016" layer="22" ratio="10" rot="MR237.5">GREEN</text>
@@ -303,6 +303,7 @@ REG</text>
 <smd name="2" x="0.508" y="0" dx="0.635" dy="1.27" layer="1" cream="no"/>
 <text x="-0.9525" y="1.27" size="0.4064" layer="25">&gt;NAME</text>
 <text x="-0.9525" y="-1.651" size="0.4064" layer="27">&gt;VALUE</text>
+<rectangle x1="-0.254" y1="-0.254" x2="0.254" y2="0.254" layer="29"/>
 </package>
 <package name="JST-2-SMD-VERT">
 <description>JST B2B-PH-SM4-TM 2-pin connector&lt;br&gt;

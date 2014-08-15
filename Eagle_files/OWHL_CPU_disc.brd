@@ -214,7 +214,7 @@
 <text x="8.763" y="10.795" size="1.016" layer="22" font="vector" ratio="15" rot="MR90">PD7</text>
 <text x="8.636" y="13.97" size="1.016" layer="22" font="vector" ratio="15" rot="MR90">PD6</text>
 <text x="8.763" y="17.018" size="1.016" layer="22" font="vector" ratio="15" rot="MR90">PD5</text>
-<text x="6.985" y="26.543" size="1.016" layer="22" font="vector" ratio="15" rot="MR90">INT1</text>
+<text x="6.985" y="27.305" size="1.016" layer="22" font="vector" ratio="15" rot="MR90">INT1</text>
 <text x="30.48" y="24.765" size="1.016" layer="22" font="vector" ratio="15" rot="MR0">VCC</text>
 <text x="30.48" y="22.352" size="1.016" layer="22" font="vector" ratio="15" rot="MR0">GND</text>
 <text x="30.607" y="19.812" size="1.016" layer="22" font="vector" ratio="15" rot="MR0">RESET</text>
