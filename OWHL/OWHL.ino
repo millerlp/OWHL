@@ -132,7 +132,11 @@ void setup() {
 	
 	// Set Buzzer pin as output
 	pinMode(BUZZER, OUTPUT);
+	duration = 200; // lengthen duration of buzzer beep
+	frequency = 4000; // change pitch of buzzer (Hz)
 	beepbuzzer();
+	duration = 12; // reset buzzer beep duration
+	frequency = 8000; // reset buzzer frequency
 	
 
 #if ECHO_TO_SERIAL
