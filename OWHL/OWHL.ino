@@ -974,11 +974,12 @@ void heartBeatInterrupt() {
 
 void heartBeat(void){
 				if (heartBeatCount < 10){
-						digitalWrite(LED, HIGH); // also flash LED
-						beepbuzzer(); // Play tone on Arduino pin 7 (PD7)
-					   // delay(5);
-					   digitalWrite(LED, LOW); // turn off LED
-					   heartBeatCount = heartBeatCount++; // increment counter
+						
+					beepbuzzer(); // Play tone on Arduino pin 7 (PD7)
+					digitalWrite(LED, HIGH); // also flash LED
+					delay(5);
+					digitalWrite(LED, LOW); // turn off LED
+					heartBeatCount = heartBeatCount++; // increment counter
 				} else {
 					// If the heartbeat has executed 10 times, shut if off,
 					// reactivate the heartbeat interrupt, and reset the counter
