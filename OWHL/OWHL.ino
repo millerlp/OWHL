@@ -82,7 +82,7 @@ byte heartBeatCount = 0; // counter to keep track of heartbeat loops
 //-------------------------------------------------
 // Buzzer frequency (Hz) and duration (milliseconds). 
 unsigned int frequency = 8000;
-unsigned long duration = 10;
+unsigned long duration = 12;
 // Additional global variables used by the buzzer function
 volatile long timer1_toggle_count;
 volatile uint8_t *timer1_pin_port;
