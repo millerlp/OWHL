@@ -3,7 +3,7 @@
 The code in this repository runs a pressure sensor data logger 
 that can be used to log wave heights over long periods of time. 
 It is meant to be placed in 10m of water, where it then records pressure 
-via a MS5803 pressure sensor to a microSD card. See 
+via a MS5803 pressure sensor and writes to a microSD card. See 
 http://lukemiller.org/index.php/2014/08/open-wave-height-logger/ for
 more information.
 
