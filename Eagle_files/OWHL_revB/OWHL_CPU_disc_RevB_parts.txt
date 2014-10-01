@@ -1,0 +1,29 @@
+Partlist
+
+Exported from OWHL_CPU_disc_RevB.sch at 10/1/2014 10:19:50 AM
+
+EAGLE Version 6.6.0 Copyright (c) 1988-2014 CadSoft
+
+Assembly variant: 
+
+Part     Value                    Device                   Package                   Library  Sheet
+
+C1       0.1 uF                   C-USC0805                C0805                     rcl      1
+C2       0.1 uF                   C-USC0805                C0805                     rcl      1
+C3       0.1 uF                   C-USC0805                C0805                     rcl      1
+IC1      DS3231/SO                DS3231/SO                SO16W                     miller   1
+J1       AVR_SPI_PRG_6PTH         AVR_SPI_PRG_6PTH         2X3                       miller   1
+JP1                               PINHD-1X6                1X06                      adafruit 1
+JP2                               PINHD-1X6                1X06                      adafruit 1
+JP3                               PINHD-1X6                1X06                      adafruit 1
+R1       10 kohm                  R-US_R0805               R0805                     rcl      1
+R2       10 kohm                  R-US_R0805               R0805                     rcl      1
+R3       10 kohm                  R-US_R0805               R0805                     rcl      1
+R4       10 kohm                  R-US_R0805               R0805                     rcl      1
+R5       100 kohm                 R-US_R0805               R0805                     rcl      1
+R6       100 kohm                 R-US_R0805               R0805                     rcl      1
+U$1      SOLDER_JUMPER_TRACE      SOLDER_JUMPER_TRACE      SJ_2S-TRACE               miller   1
+U$2      CR1220_BATTERY_HOLDERSMD CR1220_BATTERY_HOLDERSMD CR1220_BATTERY_HOLDER_SMD miller   1
+U$3      MICROSD                  MICROSD                  MICROSD                   miller   1
+U$4      CRYSTAL_32768KHZ_SMD     CRYSTAL_32768KHZ_SMD     CRYSTAL_328768KHZ_SMD2    miller   1
+U1       ATMEGA328P               ATMEGA328_SMT            TQFP32-08                 miller   1
