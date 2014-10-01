@@ -239,6 +239,8 @@
 <text x="12.954" y="6.096" size="1.016" layer="21" font="vector" ratio="13" rot="R90">32.768</text>
 <text x="14.224" y="6.731" size="1.016" layer="21" font="vector" ratio="13" rot="R90">kHz</text>
 <text x="26.67" y="27.178" size="1.4224" layer="21" font="vector" ratio="13" rot="R90">Rev B</text>
+<text x="17.399" y="6.858" size="1.4224" layer="21" ratio="15">TOP</text>
+<text x="22.479" y="19.685" size="1.27" layer="22" ratio="12" rot="MR0">BOTTOM</text>
 </plain>
 <libraries>
 <library name="miller">

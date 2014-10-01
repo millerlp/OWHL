@@ -212,8 +212,10 @@
 <text x="16.256" y="23.495" size="1.778" layer="22" rot="MR0">+</text>
 <text x="23.749" y="5.715" size="1.4224" layer="21" ratio="10">OWHL
 Rev B</text>
-<text x="29.718" y="5.715" size="1.4224" layer="22" ratio="10" rot="MR0">OWHL
+<text x="29.718" y="6.477" size="1.4224" layer="22" ratio="10" rot="MR0">OWHL
 Rev B</text>
+<text x="16.51" y="11.43" size="1.6764" layer="21" ratio="15">TOP</text>
+<text x="30.099" y="4.699" size="1.27" layer="22" ratio="15" rot="MR0">BOTTOM</text>
 </plain>
 <libraries>
 <library name="miller">

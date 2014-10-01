@@ -227,6 +227,7 @@ REG</text>
 <text x="20.955" y="0.127" size="1.016" layer="22" rot="MR0">+</text>
 <text x="20.955" y="35.687" size="1.4224" layer="21" rot="R180">Rev B</text>
 <text x="15.113" y="35.687" size="1.4224" layer="22" rot="MR180">Rev B</text>
+<text x="16.764" y="26.035" size="1.6764" layer="21" ratio="15">TOP</text>
 </plain>
 <libraries>
 <library name="miller">
