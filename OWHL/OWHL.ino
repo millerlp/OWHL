@@ -66,6 +66,11 @@
 
 #define SAMPLES_PER_SECOND 4// number of samples taken per second (4, 2, or 1)
 
+// Define a variable to use either the DS3231 32.768kHz signal (true) or 
+// an external 32.768kHz crystal (false)
+boolean useClockCrystal = false; 
+
+
 const byte chipSelect = 10; // define the Chip Select pin for SD card
 char filename[] = "LOGGER00.CSV";
 
@@ -273,7 +278,7 @@ void setup() {
 		// if using a 32.768 signal from the DS3231 Chronodot on XTAL1, 
 		// or false if using a crystal on XTAL1/XTAL2. The 2nd argument
 		// should be the current time
-		newtime = startTIMER2(true, newtime);
+		newtime = startTIMER2(useClockCrystal, newtime);
 		// Initialize oldtime and oldday values
 		oldtime = newtime;
 		oldday = oldtime.day();
@@ -541,7 +546,7 @@ void loop() {
 			}
 			
 			// If it is the wakeMinute, restart TIMER2
-			newtime = startTIMER2(true,newtime);
+			newtime = startTIMER2(useClockCrystal,newtime);
 			// Start a new file 
 			//initFileName(newtime); // LPM commented out so new files only start on new days
 			// Go back to sleep with TIMER2 interrupts activated
