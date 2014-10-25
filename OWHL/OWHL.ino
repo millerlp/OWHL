@@ -30,7 +30,7 @@
   If you are using an external 32.768kHz crystal instead of
   the built-in signal from the DS3231 clock, set the
   variable useClockCrystal = false. Otherwise, leave the
-  value set = true. 
+  value set = true.
   
   When not recording, the sketch goes into a lower power 
   sleep (lowPowerSleep) mode using the watchdog timer set 
