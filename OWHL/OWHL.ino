@@ -72,7 +72,7 @@
 #define SAMPLES_PER_SECOND 4// number of samples taken per second (4, 2, or 1)
 
 // Define a variable to use either the DS3231 32.768kHz signal (true) or 
-// an external 32.768kHz crystal (false)
+// an external 32.768kHz crystal (false). 
 boolean useClockCrystal = true; 
 
 
