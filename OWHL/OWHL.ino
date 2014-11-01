@@ -145,8 +145,8 @@ void setup() {
 	duration = 200; // lengthen duration of buzzer beep
 	frequency = 4000; // change pitch of buzzer (Hz)
 	beepbuzzer();
-	duration = 12; // reset buzzer beep duration
-	frequency = 8000; // reset buzzer frequency
+	duration = 25; // reset buzzer beep duration
+	frequency = 4000; // reset buzzer frequency
 	
 
 #if ECHO_TO_SERIAL
@@ -327,7 +327,7 @@ void loop() {
 		// If the current minute is >= than STARTMINUTE and <= endMinute, 
 		// then take data
 		if (newtime.minute() >= STARTMINUTE && newtime.minute() <= endMinute) {
-
+	
 			// Check to see if the current seconds value
 			// is equal to oldtime.second(). If so, we
 			// are still in the same second. If not,
@@ -339,24 +339,21 @@ void loop() {
 				loopCount = 0; // reset loopCount
 			}
 			
-			if (fracSec == 0) {
-					if (heartBeatFlag) {
-					heartBeat(); // call the heartBeat function
-				}
-			}
-			
 			// Save current time to unixtimeArray
 			unixtimeArray[loopCount] = newtime.unixtime();
 			fracSecArray[loopCount] = fracSec;
-
-			// bitSet(PINB,1); // used to visualize timing with LED or oscilloscope
 
 			// Use readSensor() function to get pressure and temperature reading
 			sensor.readSensor();
 			pressureArray[loopCount] = sensor.pressure();
 			tempCArray[loopCount] = sensor.temperature();
 
-//			bitSet(PIND, 6); // used to visualize timing with LED or oscilloscope
+			if (fracSec == 0) {
+				if (heartBeatFlag) {
+					heartBeat(); // call the heartBeat function
+					delay(duration); // keep the AVR awake long enough to play the sound
+				}
+			}
 
 			// Now if loopCount is equal to the value in SAMPLES_PER_SECOND
 			// (minus 1 for zero-based counting), then write out the contents
@@ -410,7 +407,7 @@ void loop() {
 #if SAMPLES_PER_SECOND == 2
 			fracSec = fracSec + 50;
 #endif
-			//  bitSet(PINB,1); // toggle LED
+			
 
 			goToSleep(); // call the goToSleep function (below)
 		
@@ -433,6 +430,7 @@ void loop() {
 #endif 
 				if (heartBeatFlag) {
 					heartBeat(); // call the heartBeat function
+					delay(duration); // delay long enough to play the sound
 				}
 				// Since it is the wakeMinute, we'll idle in the 
 				// goToSleep cycle (returning f_wdt = 1 on interrupt from
@@ -450,6 +448,7 @@ void loop() {
 #endif 
 				if (heartBeatFlag) {
 					heartBeat(); // call the heartBeat function
+					delay(duration); // delay long enough to play the sound
 				}
 				TIMSK2 = 0; // stop TIMER2 interrupts
 				// Turn off the RTC's 32.768kHz clock signal
@@ -471,6 +470,7 @@ void loop() {
 #endif
 			if (heartBeatFlag) {
 				heartBeat(); // call the heartBeat function
+				delay(duration); // delay long enough to play the sound
 			}
 			
 			TIMSK2 = 0; // stop TIMER2 interrupts
@@ -500,6 +500,7 @@ void loop() {
 #endif
 				if (heartBeatFlag) {
 					heartBeat(); // call the heartBeat function
+					delay(duration); // delay long enough to play sound
 				}			
 			goToSleep();
 			
@@ -533,6 +534,7 @@ void loop() {
 			
 			if (heartBeatFlag) {
 				heartBeat(); // call the heartBeat function
+				delay(duration); // delay long enough to play sound
 			}			
 			// If it is not yet the wakeMinute, just go back to 
 			// low power sleep mode
@@ -548,6 +550,7 @@ void loop() {
 #endif
 			if (heartBeatFlag) {
 				heartBeat(); // call the heartBeat function
+				delay(duration); //delay long enough to play sound
 			}
 			
 			// If it is the wakeMinute, restart TIMER2
@@ -989,10 +992,10 @@ void heartBeatInterrupt() {
 void heartBeat(void){
 				if (heartBeatCount < 10){
 						
-					beepbuzzer(); // Play tone on Arduino pin 7 (PD7)
 					digitalWrite(LED, HIGH); // also flash LED
 					delay(5);
 					digitalWrite(LED, LOW); // turn off LED
+					beepbuzzer(); // Play tone on Arduino pin 7 (PD7)
 					heartBeatCount = heartBeatCount++; // increment counter
 				} else {
 					// If the heartbeat has executed 10 times, shut if off,
