@@ -317,7 +317,7 @@ void loop() {
 	//1111111111111111111111111111111111111111111111111111111111111111111111111
 	if (f_wdt == 1) {
 		f_wdt = 0; // reset interrupt flag
-//		bitSet(PIND, 6); // used to visualize timing with LED or oscilloscope
+		// bitSet(PINC, 1); // used to visualize timing with LED or oscilloscope
 
 		// Get a new time reading from the real time clock
 		newtime = RTC.now();
@@ -374,11 +374,6 @@ void loop() {
 				// to the SD card
 				writeToSD();
 				
-				// If the heartbeat flag is currently set true, activate the buzzer and/or LED
-				// to notify the user that a write to SD just occurred.
-				
-
-				
 #if ECHO_TO_SERIAL
 				if (newtime.second() % 10 == 0){
 					printTimeSerial(newtime, fracSec);
@@ -408,7 +403,7 @@ void loop() {
 			fracSec = fracSec + 50;
 #endif
 			
-
+			// bitSet(PINC, 1); // used to visualize timing with LED or oscilloscope
 			goToSleep(); // call the goToSleep function (below)
 		
 		//***************************************************************
@@ -587,6 +582,7 @@ ISR(TIMER2_OVF_vect) {
 	if (f_wdt == 0) { // if flag is 0 when interrupt is called
 		f_wdt = 1; // set the flag to 1
 	} 
+	bitSet(PINC,1);
 }
 
 
