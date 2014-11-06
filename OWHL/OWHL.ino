@@ -791,7 +791,7 @@ void writeToSD (void) {
 	// Reopen logfile. If opening fails, notify the user
 	if (!logfile.isOpen()) {
 		if (!logfile.open(filename, O_RDWR | O_CREAT | O_AT_END)) {
-			bitSet(PINB, 0); // toggle ERRLED to show error
+			digitalWrite(ERRLED, HIGH); // turn on error LED
 #if ECHO_TO_SERIAL
 			sd.errorHalt("opening file for write failed");
 #endif
@@ -837,14 +837,14 @@ void writeToSD (void) {
 		// a string, truncating at 2 digits of precision
 		dtostrf(tempCArray[i], precision+3, precision, tempBuffer);
 		logfile.println(tempBuffer);
-		logfile.sync(); // flush all data to SD card
+		// logfile.sync(); // flush all data to SD card (uses lots of power)
 	}
 	  DateTime t1 = DateTime(unixtimeArray[0]);
 	  // If the seconds value is 30, update the file modified timestamp
 	  if (t1.second() % 30 == 0){
 	    logfile.timestamp(T_WRITE, t1.year(),t1.month(),t1.day(),t1.hour(),t1.minute(),t1.second());
 	  }
-	logfile.close(); // close file again
+	// logfile.close(); // close file again. This forces a full sync (which uses lots of power)
 //	bitSet(PIND, 7); // Toggle Arduino pin 7 for oscilloscope monitoring
 	// bitSet(PIND, 6); // Toggle LED for monitoring
 }
@@ -890,7 +890,7 @@ void initFileName(DateTime time1) {
 #if ECHO_TO_SERIAL
 				sd.errorHalt("opening file for write failed");
 #endif
-				// Turn both inidicator LEDs on to indicate a failure
+				// Turn both indicator LEDs on to indicate a failure
 				// to create the log file
 				bitSet(PINB, 0); // Toggle error led on PINB0 (D8 Arduino)
 				bitSet(PINB, 1); // Toggle indicator led on PINB1 (D9 Arduino)
