@@ -67,7 +67,7 @@
 #define ECHO_TO_SERIAL 0 // echo data to serial port, set to 0 to turn off
 
 #define STARTMINUTE 0 // minute of hour to start taking data, 0 to 59
-#define DATADURATION 60 // # of minutes to collect data, 1 to 60
+#define DATADURATION 30 // # of minutes to collect data, 1 to 60
 
 #define SAMPLES_PER_SECOND 4// number of samples taken per second (4, 2, or 1)
 
@@ -363,6 +363,8 @@ void loop() {
 				// Check to see if a new day has started. If so, open a new file
 				// with the initFileName() function
 				if (oldtime.day() != oldday) {
+					// Close existing file
+					logfile.close();
 					// Generate a new output filename based on the new date
 					initFileName(oldtime);
 					// Update oldday value to match the new day
