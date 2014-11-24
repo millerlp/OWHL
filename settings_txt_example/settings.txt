@@ -1,0 +1,22 @@
+// settings.txt file for OWHL
+// Install this file in the root directory of your 
+// microSD card if you want to change the sampling time
+// and duration, or change the mission info. 
+// All lines that start with a / are ignored
+// The file should have only one uncommented line, and it
+// should consist of three entries separated by commas:
+// startMinute, dataDuration, missionInfo
+// startMinute is a value 0 to 59, setting what minute
+// of every hour the OWHL should start logging data. 
+// dataDuration is a value 1 to 60 that sets how many
+// minutes of each hour to sample
+// missionInfo is a text/numeric entry of up to 50 
+// characters that will be inserted into the header
+// of every output file. Do not use commas in the 
+// missionInfo entry. 
+// An example entry: 0,60,JFK pier sensor 1
+// This example will start sampling at minute 0 of
+// every hour and continue for 60 minutes (continuous
+// sampling). Each output file will contain the text
+// "JFK pier sensor 1" in the first row.
+0,60,JFK pier sensor 1
