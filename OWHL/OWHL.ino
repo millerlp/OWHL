@@ -77,7 +77,17 @@ boolean useClockCrystal = true;
 
 
 const byte chipSelect = 10; // define the Chip Select pin for SD card
+// Declare initial name for output files written to SD card
 char filename[] = "LOGGER00.CSV";
+// Define name of settings file that may appear on SD card
+char setfilename[] = "settings.txt";  
+
+// Create variables to hold settings from SD card settings.txt file
+#define arraylen 50 // maximum number of characters in missionInfo array
+uint8_t startMinute; // changeable value for startMinute from settings.txt
+uint8_t dataDuration; // changeable value for dataDuration from settings.txt
+char missionInfo[arraylen]; // character array to hold missionInfo from settings.txt
+
 
 // Declare data arrays
 uint32_t unixtimeArray[SAMPLES_PER_SECOND]; // store unixtime values temporarily
@@ -120,7 +130,7 @@ RTC_DS3231 RTC;
 MS_5803 sensor = MS_5803(512); // the argument to MS_5803 sets the precision (256,512,1024,4096)
 SdFat sd;
 SdFile logfile;  // for sd card, this is the file object to be written to
-
+SdFile setfile; // for sd card, this is the settings file to read from
 
  
 //---------------------------------------------------------
@@ -155,15 +165,7 @@ void setup() {
 	delay(500);
 	Serial.println(F("Starting up..."));
 #endif
-	// Calculate what minute of the hour the program should turn the 
-	// accurate timer back on to start taking data again
-	if (STARTMINUTE == 0) {
-		wakeMinute = 59;
-	} else {
-		wakeMinute = STARTMINUTE - 1;
-	}
-	// if endMinute value is above 60, just set it to 59
-	if (endMinute >= 60) endMinute = 59;
+
 	
 
 
@@ -240,6 +242,11 @@ void setup() {
 						beepbuzzer();
 		}
 	}
+	
+	// Read the startMinute, dataDuration, and missionInfo from the
+	// setttings.txt file on the SD card, if present. 
+	getSettings();
+	
 #if ECHO_TO_SERIAL
 	Serial.println(F("SD initialization done."));
 #endif
@@ -253,6 +260,20 @@ void setup() {
 	Serial.println(wakeMinute);
 	delay(40);
 #endif
+	//--------------------------------------------------------------
+	// Calculate what minute of the hour the program should turn the 
+	// accurate timer back on to start taking data again.
+	if (startMinute == 0) {
+		wakeMinute = 59;
+	} else {
+		wakeMinute = startMinute - 1;
+	}
+	// If the getSettings() function returned new values for
+	// startMinute and dataDuration, recalculate endMinute value
+	endMinute = startMinute + dataDuration - 1;
+	// if endMinute value is above 60, just set it to 59
+	if (endMinute >= 60) endMinute = 59;
+
 	
 	// Start MS5803 pressure sensor
 	sensor.initializeMS_5803();
@@ -1117,6 +1138,78 @@ ISR(TIMER1_COMPA_vect)
     *timer1_pin_port &= ~(timer1_pin_mask);  // keep pin low after stop
   }
 }
+
+//----------------------------------------------------------------------------
+void getSettings()
+{
+  char character;
+  char temporary[3];
+ // Open the settings file for reading:
+  if (sd.exists(setfilename)){
+	setfile.open(setfilename, O_READ);
+	while (setfile.available()){
+		character = setfile.read();
+		if (character == '/') { // if first character is a comment character
+			while(character != '\n'){
+				// skip all characters until you reach the newline \n character
+				character=setfile.read();
+			}
+		}
+		// We should now be at the first value in the file
+		// Step through the next few characters and add them to the
+		// temporary array
+		for (int i = 0; i < 3; i++){
+			if (character != ',') {
+				temporary[i] = character;
+				character=setfile.read(); // read next value
+			} else {
+				temporary[i] = '\0'; // terminate array
+				break;
+			}
+		}
+		startMinute = atoi(temporary); // convert array to integer
+		if (startMinute >= 0 && startMinute <= 59) {
+			
+		}
+		// We should now be at the 2nd value in the file, after a comma
+		char temporary[3]; // reset temporary array
+		character = setfile.read(); // read the next character after the comma
+		for (int i = 0; i < 3; i++){
+			if (character != ',') {
+				temporary[i] = character;
+				character = setfile.read(); // read next value
+			} else {
+				temporary[i] = '\0'; // terminate array
+				break;
+			}
+		}
+		dataDuration = atoi(temporary); // convert array to integer
+		
+		// We should now be at the 3rd entry, the mission info, which can be
+		// up to the length that arraylen is defined as up above. It will 
+		// stop reading at any newline character or commas though. 
+		int i = 0;
+		character = setfile.read(); // read the next character after the comma
+		while (character >= 0 && character != '\n' && character != ',' && i < arraylen) {
+			missionInfo[i] = character; // write next value to missionInfo
+			i = i++; // increment i
+			character = setfile.read(); // read next value
+		}
+		missionInfo[i] = '\0'; // terminate character string	
+		return; // quit out of the while(setfile.available()) loop
+		}
+    setfile.close();
+	} else { 
+		startMinute = STARTMINUTE;
+		dataDuration = DATADURATION;
+	}
+}
+
+
+
+
+
+
 
 //---------------------------------------------------------------------------
 // freeRam function. Used to report back on the current available RAM while
