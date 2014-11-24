@@ -73,7 +73,7 @@
 
 // Define a variable to use either the DS3231 32.768kHz signal (true) or 
 // an external 32.768kHz crystal (false). 
-boolean useClockCrystal = true;  
+boolean useClockCrystal = false;  
 
 
 const byte chipSelect = 10; // define the Chip Select pin for SD card
@@ -86,7 +86,8 @@ char setfilename[] = "settings.txt";
 #define arraylen 50 // maximum number of characters in missionInfo array
 uint8_t startMinute; // changeable value for startMinute from settings.txt
 uint8_t dataDuration; // changeable value for dataDuration from settings.txt
-char missionInfo[arraylen]; // character array to hold missionInfo from settings.txt
+// Define character array to hold missionInfo from settings.txt
+char missionInfo[arraylen] = "Default mission information for csv file header"; 
 
 
 // Declare data arrays
@@ -244,22 +245,9 @@ void setup() {
 	}
 	
 	// Read the startMinute, dataDuration, and missionInfo from the
-	// setttings.txt file on the SD card, if present. 
+	// settings.txt file on the SD card, if present. 
 	getSettings();
 	
-#if ECHO_TO_SERIAL
-	Serial.println(F("SD initialization done."));
-#endif
-
-#if ECHO_TO_SERIAL
-	Serial.print(F("Start minute: "));
-	Serial.print(STARTMINUTE);
-	Serial.print(F(", endMinute: "));
-	Serial.print(endMinute);
-	Serial.print(F(", wakeMinute: "));
-	Serial.println(wakeMinute);
-	delay(40);
-#endif
 	//--------------------------------------------------------------
 	// Calculate what minute of the hour the program should turn the 
 	// accurate timer back on to start taking data again.
@@ -273,7 +261,6 @@ void setup() {
 	endMinute = startMinute + dataDuration - 1;
 	// if endMinute value is above 60, just set it to 59
 	if (endMinute >= 60) endMinute = 59;
-
 	
 	// Start MS5803 pressure sensor
 	sensor.initializeMS_5803();
@@ -291,7 +278,7 @@ void setup() {
 	// go to sleep for a while
 	newtime = RTC.now();
 
-	if (newtime.minute() >= STARTMINUTE && newtime.minute() <= endMinute){
+	if (newtime.minute() >= startMinute && newtime.minute() <= endMinute){
 		// Create new file on SD card using initFileName() function
 		// This creates a filename based on the year + month + day
 		// with a number indicating which number file this is on
@@ -310,7 +297,8 @@ void setup() {
 		oldday = oldtime.day();
 		// set f_wdt flag to 1 so we start taking data in the main loop
 		f_wdt = 1;
-	} else if (newtime.minute() < STARTMINUTE | newtime.minute() > endMinute){
+		
+	} else if (newtime.minute() < startMinute | newtime.minute() > endMinute){
 		// The current minute is earlier or later in the hour than the user has 
 		// specified for taking data.
 		oldtime = newtime;
@@ -323,6 +311,7 @@ void setup() {
 		//  Enter the low power sleep cycle in the main loop
 		// by setting f_wdt = 2.
 		f_wdt = 2;	  
+		
 	}
 
 
@@ -337,6 +326,7 @@ void loop() {
 	//1111111111111111111111111111111111111111111111111111111111111111111111111
 	//1111111111111111111111111111111111111111111111111111111111111111111111111
 	if (f_wdt == 1) {
+	
 		f_wdt = 0; // reset interrupt flag
 		// bitSet(PINC, 1); // used to visualize timing with LED or oscilloscope
 
@@ -345,9 +335,9 @@ void loop() {
 		
 		//*********************************************************************
 		//*********************************************************************
-		// If the current minute is >= than STARTMINUTE and <= endMinute, 
+		// If the current minute is >= than startMinute and <= endMinute, 
 		// then take data
-		if (newtime.minute() >= STARTMINUTE && newtime.minute() <= endMinute) {
+		if (newtime.minute() >= startMinute && newtime.minute() <= endMinute) {
 	
 			// Check to see if the current seconds value
 			// is equal to oldtime.second(). If so, we
@@ -431,8 +421,8 @@ void loop() {
 		
 		//***************************************************************
 		//***************************************************************	
-		} else if (newtime.minute() < STARTMINUTE){
-			// If it is less than STARTMINUTE time, check to see if 
+		} else if (newtime.minute() < startMinute){
+			// If it is less than startMinute time, check to see if 
 			// it is wakeMinute time. If so, use goToSleep, else if not use
 			// lowPowerSleep
 			//================================================================
@@ -503,7 +493,7 @@ void loop() {
 		} else if (newtime.minute() == wakeMinute && wakeMinute == 59  && endMinute != wakeMinute){
 			// Handle the special case when logging should start on minute 0,
 			// but wakeMinute will be 59, and therefore isn't less than
-			// STARTMINUTE. Reenter goToSleep mode. The third test, with
+			// startMinute. Reenter goToSleep mode. The third test, with
 			// endMinute != wakeMinute, takes care of the additional special case
 			// where the user wants to record continuously from 0 to 59 minutes,
 			// so the endMinute would be equal to wakeMinute (that case should be
@@ -904,6 +894,10 @@ void initFileName(DateTime time1) {
 	for (uint8_t i = 0; i < 100; i++) {
 		filename[6] = i / 10 + '0';
 		filename[7] = i % 10 + '0';
+		filename[8] = '.';
+		filename[9] = 'c';
+		filename[10] = 's';
+		filename[11] = 'v';
 		if (!sd.exists(filename)) {
 			// when sd.exists() returns false, this block
 			// of code will be executed to open the file
@@ -927,6 +921,11 @@ void initFileName(DateTime time1) {
 	Serial.print(F("Logging to: "));
 	Serial.println(filename);
 #endif
+	// Write 1st header line to SD file based on mission info
+	logfile.print(missionInfo);
+	// Fill in remaining commas after missionInfo so all rows have the 
+	// same number of columns
+	logfile.println(F(",,,,")); 
 	// write a header line to the SD file
 	logfile.println(F("POSIXt,DateTime,frac.seconds,Pressure.mbar,TempC"));
 	// Sync and close the logfile for now.
@@ -1144,8 +1143,11 @@ void getSettings()
 {
   char character;
   char temporary[3];
+  boolean valid;
  // Open the settings file for reading:
   if (sd.exists(setfilename)){
+
+   
 	setfile.open(setfilename, O_READ);
 	while (setfile.available()){
 		character = setfile.read();
@@ -1154,7 +1156,7 @@ void getSettings()
 				// skip all characters until you reach the newline \n character
 				character=setfile.read();
 			}
-		}
+		}		
 		// We should now be at the first value in the file
 		// Step through the next few characters and add them to the
 		// temporary array
@@ -1168,8 +1170,9 @@ void getSettings()
 			}
 		}
 		startMinute = atoi(temporary); // convert array to integer
+		// Test to see if startMinute was interpreted as a usable value
 		if (startMinute >= 0 && startMinute <= 59) {
-			
+			valid = true;
 		}
 		// We should now be at the 2nd value in the file, after a comma
 		char temporary[3]; // reset temporary array
@@ -1184,7 +1187,20 @@ void getSettings()
 			}
 		}
 		dataDuration = atoi(temporary); // convert array to integer
+		// Check to see if dataDuration was interpreted as a usable value
+		if (valid) {
+			if (dataDuration >= 0 && dataDuration <= 60) {
+				valid = true;
+			} else {
+				valid = false;
+			}
+		}
 		
+		// If startMinute or dataDuration were not valid, break out of 
+		// the loop, otherwise continue reading in the missionInfo
+		if (!valid) {
+			break;
+		}
 		// We should now be at the 3rd entry, the mission info, which can be
 		// up to the length that arraylen is defined as up above. It will 
 		// stop reading at any newline character or commas though. 
@@ -1195,13 +1211,37 @@ void getSettings()
 			i = i++; // increment i
 			character = setfile.read(); // read next value
 		}
-		missionInfo[i] = '\0'; // terminate character string	
-		return; // quit out of the while(setfile.available()) loop
+		missionInfo[i] = '\0'; // terminate character string
+		break; // stop the while(setfile.available()) loop
 		}
-    setfile.close();
+    
 	} else { 
 		startMinute = STARTMINUTE;
 		dataDuration = DATADURATION;
+		valid = false;
+	}
+	setfile.close();
+	
+	if (valid) {
+		// Flash green LED to notify user that settings were read from the 
+		// SD card. 
+		for (int flsh = 0; flsh < 10; flsh++){
+				digitalWrite(LED, HIGH);
+				delay(100);
+				digitalWrite(LED, LOW);
+				delay(100);
+		}
+	} else if (!valid){
+			// If one of the values wasn't valid, reset both
+			// to the default values.
+			startMinute = STARTMINUTE;
+			dataDuration = DATADURATION;
+			for (int flsh = 0; flsh < 5; flsh++){
+			digitalWrite(ERRLED, HIGH);
+			delay(100);
+			digitalWrite(ERRLED, LOW);
+			delay(100);
+		}
 	}
 }
 
