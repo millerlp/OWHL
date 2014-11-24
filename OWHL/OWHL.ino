@@ -73,7 +73,7 @@
 
 // Define a variable to use either the DS3231 32.768kHz signal (true) or 
 // an external 32.768kHz crystal (false). 
-boolean useClockCrystal = true;  
+boolean useClockCrystal = false;  
 
 
 const byte chipSelect = 10; // define the Chip Select pin for SD card
@@ -923,13 +923,22 @@ void initFileName(DateTime time1) {
 #endif
 	// Write 1st header line to SD file based on mission info
 	logfile.print(missionInfo);
+	logfile.print(F(","));
+	logfile.print(F("startMinute"));
+	logfile.print(F(","));
+	logfile.print(startMinute);
+	logfile.print(F(","));
+	logfile.print(F("minutes per hour"));
+	logfile.print(F(","));
+	logfile.println(dataDuration);
+
+	
 	// Fill in remaining commas after missionInfo so all rows have the 
 	// same number of columns
-	logfile.println(F(",,,,")); 
+	// logfile.println(F(",,,,")); 
 	// write a header line to the SD file
 	logfile.println(F("POSIXt,DateTime,frac.seconds,Pressure.mbar,TempC"));
-	// Sync and close the logfile for now.
-	logfile.sync();
+
 	// Update the file's creation date, modify date, and access date.
 	logfile.timestamp(T_CREATE, time1.year(), time1.month(), time1.day(), 
 			time1.hour(), time1.minute(), time1.second());
@@ -1150,13 +1159,16 @@ void getSettings()
    
 	setfile.open(setfilename, O_READ);
 	while (setfile.available()){
-		character = setfile.read();
-		if (character == '/') { // if first character is a comment character
-			while(character != '\n'){
-				// skip all characters until you reach the newline \n character
-				character=setfile.read();
+		character = setfile.read(); // read first character in file
+		while(character == '/') {
+			if (character == '/') { // if first character is a comment character
+				while(character != '\n'){
+					// skip all characters until you reach the newline \n character
+					character=setfile.read();
+				}
 			}
-		}		
+			character = setfile.read();
+		}
 		// We should now be at the first value in the file
 		// Step through the next few characters and add them to the
 		// temporary array
@@ -1189,7 +1201,7 @@ void getSettings()
 		dataDuration = atoi(temporary); // convert array to integer
 		// Check to see if dataDuration was interpreted as a usable value
 		if (valid) {
-			if (dataDuration >= 0 && dataDuration <= 60) {
+			if (dataDuration >= 1 && dataDuration <= 60) {
 				valid = true;
 			} else {
 				valid = false;
@@ -1206,7 +1218,12 @@ void getSettings()
 		// stop reading at any newline character or commas though. 
 		int i = 0;
 		character = setfile.read(); // read the next character after the comma
-		while (character >= 0 && character != '\n' && character != ',' && i < arraylen) {
+		while (character >= 0 && character != '\n' && character != '\r' && character != ','  && i < arraylen) {
+			// The tests in this while() statement will stop reading the line as
+			// soon as it finds an End of File marker (value < 0), a newline
+			// character ('\n'), a carriage return character ('\r'), 
+			// another comma, or once it's read more characters than will fit
+			// in the arraylen limit. 			
 			missionInfo[i] = character; // write next value to missionInfo
 			i = i++; // increment i
 			character = setfile.read(); // read next value
@@ -1216,10 +1233,19 @@ void getSettings()
 		}
     
 	} else { 
+		// The settings.txt file wasn't found in the root
+		// directory of the sd card, so just set the parameters
+		// to their defaults.
 		startMinute = STARTMINUTE;
 		dataDuration = DATADURATION;
-		valid = false;
+		setfile.close();
+		return; // quit out of the function immediately
+		// The leds will not be flashed in this case, so if the user
+		// was expecting files to be read off the settings.txt file
+		// the lack of success or failure led flashes will signify
+		// that the file wasn't found. 
 	}
+	
 	setfile.close();
 	
 	if (valid) {
@@ -1236,6 +1262,9 @@ void getSettings()
 			// to the default values.
 			startMinute = STARTMINUTE;
 			dataDuration = DATADURATION;
+			// Flash the red error led to notify the user that
+			// the settings.txt file was read, but the values
+			// were not valid and will not be used. 
 			for (int flsh = 0; flsh < 5; flsh++){
 			digitalWrite(ERRLED, HIGH);
 			delay(100);
