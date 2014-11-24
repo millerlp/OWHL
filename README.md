@@ -19,7 +19,7 @@ file, which is typically found in the `hardware/arduino/` directory.
 * Eagle_files - This directory contains Eagle CAD designs for the 
 OWHL printed circuit boards. 
 
-### Additional necessary files
+### External libraries
 To make the OWHL run properly, you need to install one of the 
 MS5803 pressure sensor libraries I have written. They are 
 contained in separate repositories for each model. Choose 
@@ -32,5 +32,10 @@ directory.
 * MS5803-05BA: http://github.com/millerlp/MS5803_05 
 * MS5803-14BA: http://github.com/millerlp/MS5803_14 
 * MS5803-30BA: http://github.com/millerlp/MS5803_30 
+
+You also need the real time clock library and SdFat library.
+* RTClib: https://github.com/darkazazeal/rtclib
+* SdFat: https://github.com/greiman/SdFat
+
 
 Developed under Arduino v1.0.5-r2. 
