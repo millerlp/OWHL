@@ -2,13 +2,16 @@
  * 
 
 	OWHL - Open Wave Height Logger
-	
+	Written under Arduino 1.0.5-r2
+	https://github.com/millerlp/OWHL 
   -------------------------------------------------------------------
   The sketch:
   During setup, we enable the DS3231 RTC's 32.768kHz output hooked to 
   XTAL1 to provide a timed interrupt on TIMER2. 
   The DS3231 32kHz pin should be connected to XTAL1, with a 10kOhm 
-  pull-up resistor between XTAL1 and +Vcc (3.3V). 
+  pull-up resistor between XTAL1 and +Vcc (3.3V). Alternatively, if
+  you wish to use a 32.768kHz crystal hooked to XTAL1 and XTAL2, 
+  change the value of useClockCrystal below to false.
 
   We set the prescaler on TIMER2 so that it only interrupts
   every 0.25 second (or change the value of SAMPLES_PER_SECOND in 
@@ -26,11 +29,29 @@
   take data every hour starting at minute 00, and record 30 
   minutes worth of data. For continuous recording, set 
   STARTMINUTE = 0 and DATADURATION = 60. 
+	
+  The character string stored in "missionInfo" will be written
+  to the 1st header row of every output file. You may change it
+  here or reset it using a settings.txt file on the SD card.
   
-  If you are using an external 32.768kHz crystal instead of
-  the built-in signal from the DS3231 clock, set the
-  variable useClockCrystal = false. Otherwise, leave the
-  value set = true.
+  The startMinute, dataDuration, and missionInfo may optionally
+  be changed by including a settings.txt file on the root 
+  directory of the SD card. The file should always be named
+  settings.txt. It should consist of one line with three
+  values: startMinute, dataDuration, missionInfo, each separated
+  by commas.
+  startMinute should be a numeric value 0 to 59.
+  dataDuration should be a numeric value 1 to 60. 
+  missionInfo is a character/numeric entry that you can use 
+  to describe this mission. Do not use commas inside the
+  missionInfo entry. 
+  An example settings.txt file would look like this:
+  0,60,JFK Pier 1
+  
+  That makes the logger start logging at minute 0, and 
+  log for 60 minutes (i.e. continuous logging all day), 
+  and the "JFK Pier 1" will be inserted into the 1st header
+  row of every output file produced. 
   
   When not recording, the sketch goes into a lower power 
   sleep (lowPowerSleep) mode using the watchdog timer set 
@@ -39,32 +60,29 @@
   If a buzzer is present on AVR pin PD7 and a (reed) switch
   is present on pin PD3, the sketch will beep the buzzer 10 
   times and flash the LED to indicate that the logger is alive
-  while running. 
-
+  while running. If the logger is in a lowPowerSleep state with
+  8 second timeouts, the buzzer will only beep every 8 seconds
+  after the reed switch is activated.
  */
-#include <SPI.h>
-#include <Wire.h>
-#include <RTClib.h>
-#include <RTC_DS3231.h>
-#include <MS5803_14.h>
-#include <SdFat.h>
+#include <SPI.h> // stock Arduino library
+#include <Wire.h> // stock Arduino library
+#include <RTClib.h> // https://github.com/darkazazeal/rtclib
+#include <RTC_DS3231.h> // https://github.com/darkazazeal/rtclib
+#include <MS5803_14.h> // https://github.com/millerlp/MS5803_14
+#include <SdFat.h> // https://github.com/greiman/SdFat
 
-
+// The following libraries should come with the normal Arduino 
+// distribution. 
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
 #include <util/atomic.h>
 #include <wiring_private.h>
 #include <avr/wdt.h>
 
-
-
 #define REEDSW 3 // Arduino pin D3, AVR pin PD3, aka INT1
 #define ERRLED 5 // Arduino pin D5, AVR pin PD5
 #define LED 6 	  // Arduino pin D6, AVR pin PD6
 #define BUZZER 7 // Arduino pin D7, AVR pin PD7
-
-
-#define ECHO_TO_SERIAL 0 // echo data to serial port, set to 0 to turn off
 
 #define STARTMINUTE 0 // minute of hour to start taking data, 0 to 59
 #define DATADURATION 60 // # of minutes to collect data, 1 to 60
@@ -73,8 +91,7 @@
 
 // Define a variable to use either the DS3231 32.768kHz signal (true) or 
 // an external 32.768kHz crystal (false). 
-boolean useClockCrystal = false;  
-
+boolean useClockCrystal = true;  
 
 const byte chipSelect = 10; // define the Chip Select pin for SD card
 // Declare initial name for output files written to SD card
@@ -116,19 +133,23 @@ char tempBuffer [7]; // character buffer to hold string-converted temperature
 
 volatile int f_wdt = 1; // TIMER2 flag (watchdog or TIMER2 counter)
 volatile byte fracSec = 0; // fractional second count for timestamp (0,25,50,75)
+
 // endMinute is the minute value after which the program should stop taking
 // data for the remainder of the hour
 uint8_t endMinute = STARTMINUTE + DATADURATION - 1;
 // wakeMinute is the minute value when the program should start preparing to
-// wake up and take data again. This will be set during the setup loop
+// wake up and take data again. This will be set during the setup loop.
 uint8_t wakeMinute = 59;
 
 DateTime oldtime; // used to track time in main loop
 DateTime newtime; // used to track time
 uint8_t oldday; // used to track when a new day starts
 
-RTC_DS3231 RTC;
+// Create RTC object
+RTC_DS3231 RTC; 
+// Create MS_5803 object
 MS_5803 sensor = MS_5803(512); // the argument to MS_5803 sets the precision (256,512,1024,4096)
+// Create sd objects
 SdFat sd;
 SdFile logfile;  // for sd card, this is the file object to be written to
 SdFile setfile; // for sd card, this is the settings file to read from
@@ -158,17 +179,6 @@ void setup() {
 	beepbuzzer();
 	duration = 25; // reset buzzer beep duration
 	frequency = 4000; // reset buzzer frequency
-	
-
-#if ECHO_TO_SERIAL
-	Serial.begin(57600);
-	Serial.println();
-	delay(500);
-	Serial.println(F("Starting up..."));
-#endif
-
-	
-
 
 	//--------RTC SETUP ------------
 	Wire.begin();
@@ -229,10 +239,6 @@ void setup() {
 	// If the above statement returns FALSE after trying to 
 	// initialize the card, enter into this section and
 	// hold in an infinite loop.
-#if ECHO_TO_SERIAL
-		Serial.println(F("SD initialization failed"));
-#endif
-		
 		while(1){ // infinite loop due to SD card initialization error
                         digitalWrite(ERRLED, HIGH);
                         delay(100);
@@ -386,21 +392,6 @@ void loop() {
 				// Call the writeToSD function to output the data array contents
 				// to the SD card
 				writeToSD();
-				
-#if ECHO_TO_SERIAL
-				if (newtime.second() % 10 == 0){
-					printTimeSerial(newtime, fracSec);
-					// Show pressure
-					Serial.print(F("Pressure = "));
-					Serial.print(sensor.pressure());
-					Serial.print(F(" mbar, "));
-					Serial.print(sensor.temperature());
-					Serial.println(F(" C"));
-					Serial.print(F("Free RAM: ")); Serial.println(freeRam());
-					delay(40);
-				}
-#endif
-				//      bitSet(PINB,1); // used to visualize timing with LED or oscilloscope
 			} // end of if (loopCount >= (SAMPLES_PER_SECOND - 1))
 
 			// increment loopCount after writing all the sample data to
@@ -415,8 +406,6 @@ void loop() {
 #if SAMPLES_PER_SECOND == 2
 			fracSec = fracSec + 50;
 #endif
-			
-			// bitSet(PINC, 1); // used to visualize timing with LED or oscilloscope
 			goToSleep(); // call the goToSleep function (below)
 		
 		//***************************************************************
@@ -428,14 +417,6 @@ void loop() {
 			//================================================================
 			//================================================================
 			if (newtime.minute() == wakeMinute){
-				
-#if ECHO_TO_SERIAL
-				if (newtime.second() % 10 == 0){
-					printTimeSerial(newtime, fracSec);
-					Serial.println(F("Wake minute, goToSleep"));
-					delay(40);
-				}
-#endif 
 				if (heartBeatFlag) {
 					heartBeat(); // call the heartBeat function
 					delay(duration); // delay long enough to play the sound
@@ -448,12 +429,6 @@ void loop() {
 			//================================================================
 			//================================================================
 			} else if (newtime.minute() != wakeMinute){
-				
-#if ECHO_TO_SERIAL
-				printTimeSerial(newtime, fracSec);
-				Serial.println(F("Going to deep sleep"));
-				delay(40);
-#endif 
 				if (heartBeatFlag) {
 					heartBeat(); // call the heartBeat function
 					delay(duration); // delay long enough to play the sound
@@ -470,12 +445,6 @@ void loop() {
 		//***************************************************************
 		//***************************************************************
 		} else if (newtime.minute() > endMinute && newtime.minute() != wakeMinute){
-			
-#if ECHO_TO_SERIAL
-			printTimeSerial(newtime, fracSec);
-			Serial.println(F("Going to deep sleep, outer f_wdt = 1"));
-			delay(40);
-#endif
 			if (heartBeatFlag) {
 				heartBeat(); // call the heartBeat function
 				delay(duration); // delay long enough to play the sound
@@ -499,13 +468,6 @@ void loop() {
 			// so the endMinute would be equal to wakeMinute (that case should be
 			// dealt with by the first statement in the block above where data 
 			// collection happens). 
-#if ECHO_TO_SERIAL
-				if (newtime.second() % 10 == 0){
-					printTimeSerial(newtime, fracSec);
-					Serial.println(F("Wake minute, goToSleep"));
-					delay(40);
-				}
-#endif
 				if (heartBeatFlag) {
 					heartBeat(); // call the heartBeat function
 					delay(duration); // delay long enough to play sound
@@ -528,12 +490,6 @@ void loop() {
 		//===================================================================
 		//===================================================================
 		if (newtime.minute() != wakeMinute){
-			
-#if ECHO_TO_SERIAL
-			printTimeSerial(newtime, fracSec);
-			Serial.println(F("Still in deep sleep"));
-			delay(40);
-#endif
 			// Flash LED to indicate that we've come back from low
 			// power sleep mode (and are about to go back into it).
 			digitalWrite(LED, HIGH);
@@ -550,12 +506,6 @@ void loop() {
 		//===================================================================
 		//===================================================================
 		} else if (newtime.minute() == wakeMinute){
-			
-#if ECHO_TO_SERIAL
-			printTimeSerial(newtime, fracSec);
-			Serial.println(F("Restarting TIMER2, return to goToSleep mode"));
-			delay(40);
-#endif
 			if (heartBeatFlag) {
 				heartBeat(); // call the heartBeat function
 				delay(duration); //delay long enough to play sound
@@ -563,8 +513,7 @@ void loop() {
 			
 			// If it is the wakeMinute, restart TIMER2
 			newtime = startTIMER2(useClockCrystal,newtime);
-			// Start a new file 
-			//initFileName(newtime); // LPM commented out so new files only start on new days
+			
 			// Go back to sleep with TIMER2 interrupts activated
 			goToSleep();
 			// From here, f_wdt will be set to 1 on each interrupt from TIMER2
@@ -581,7 +530,7 @@ void loop() {
 //--------------------------------------------------------------
 
 
-//--------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FUNCTIONS
 
 //-----------------------------------------------------------------------------
@@ -597,8 +546,6 @@ ISR(TIMER2_OVF_vect) {
 	} 
 	bitSet(PINC,1);
 }
-
-
 
 //-----------------------------------------------------------------------------
 // goToSleep function. When called, this puts the AVR to
@@ -643,8 +590,6 @@ void goToSleep()
 	//wake up here
 	sleep_disable(); // upon wakeup (due to interrupt), AVR resumes here
 
-	//    bitSet(PINB,1); // flip Pin PB1 (digital pin 9) to indicate wakeup
-	//    ADCSRA = adcsra; //restore ADCSRA
 }
 
 //-----------------------------------------------------------------------------
@@ -655,15 +600,7 @@ void goToSleep()
 // sampling period, and start using the regular goToSleep() function that 
 // uses the more accurate TIMER2 clock source. 
 void lowPowerSleep(void){
-	
-#if ECHO_TO_SERIAL
-	Serial.print("lowPowerSleep ");
-	Serial.println(millis());
-	delay(40);
-#endif
-	
-//	bitSet(PIND,6); // flip Pin PD6 (digital pin 6) to indicate sleep
-	
+
 	/* It seems to be necessary to zero out the Asynchronous clock status 
 	 * register (ASSR) before enabling the watchdog timer interrupts in this
 	 * process. 
@@ -710,7 +647,6 @@ void lowPowerSleep(void){
 	//-------------------------------------------------------------------
 	// disable sleep as a precaution after waking
 	sleep_disable();
-//	bitSet(PIND,6); // flip Pin PD6 (digital pin 6) to indicate wakeup
 }
 
 //--------------------------------------------------------------------------
@@ -719,13 +655,7 @@ void lowPowerSleep(void){
 ISR(WDT_vect) {
 	if (f_wdt == 0) { // if flag is 0 when interrupt is called
 		f_wdt = 2; // set the flag to 2
-	} else {
-#if ECHO_TO_SERIAL
-		Serial.print(F("WDT fired, but f_wdt = "));
-		Serial.println(f_wdt);
-		delay(40);
-#endif
-	}
+	} 
 }
 
 //--------------------------------------------------------------
@@ -805,9 +735,6 @@ void writeToSD (void) {
 	if (!logfile.isOpen()) {
 		if (!logfile.open(filename, O_RDWR | O_CREAT | O_AT_END)) {
 			digitalWrite(ERRLED, HIGH); // turn on error LED
-#if ECHO_TO_SERIAL
-			sd.errorHalt("opening file for write failed");
-#endif
 		}
 	}
 	// Step through each element of the sample data arrays
@@ -850,16 +777,12 @@ void writeToSD (void) {
 		// a string, truncating at 2 digits of precision
 		dtostrf(tempCArray[i], precision+3, precision, tempBuffer);
 		logfile.println(tempBuffer);
-		// logfile.sync(); // flush all data to SD card (uses lots of power)
 	}
 	  DateTime t1 = DateTime(unixtimeArray[0]);
 	  // If the seconds value is 30, update the file modified timestamp
 	  if (t1.second() % 30 == 0){
 	    logfile.timestamp(T_WRITE, t1.year(),t1.month(),t1.day(),t1.hour(),t1.minute(),t1.second());
 	  }
-	// logfile.close(); // close file again. This forces a full sync (which uses lots of power)
-//	bitSet(PIND, 7); // Toggle Arduino pin 7 for oscilloscope monitoring
-	// bitSet(PIND, 6); // Toggle LED for monitoring
 }
 
 //------------------------------------------------------------------------------
@@ -904,9 +827,6 @@ void initFileName(DateTime time1) {
 			if (!logfile.open(filename, O_RDWR | O_CREAT | O_AT_END)) {
 				// If there is an error opening the file, notify the
 				// user. Otherwise, the file is open and ready for writing
-#if ECHO_TO_SERIAL
-				sd.errorHalt("opening file for write failed");
-#endif
 				// Turn both indicator LEDs on to indicate a failure
 				// to create the log file
 				bitSet(PINB, 0); // Toggle error led on PINB0 (D8 Arduino)
@@ -917,10 +837,6 @@ void initFileName(DateTime time1) {
 			// is finally false (i.e. you found a new file name to use).
 		} // end of if(!sd.exists())
 	} // end of file-naming for loop
-#if ECHO_TO_SERIAL
-	Serial.print(F("Logging to: "));
-	Serial.println(filename);
-#endif
 	// Write 1st header line to SD file based on mission info
 	logfile.print(missionInfo);
 	logfile.print(F(","));
@@ -931,14 +847,8 @@ void initFileName(DateTime time1) {
 	logfile.print(F("minutes per hour"));
 	logfile.print(F(","));
 	logfile.println(dataDuration);
-
-	
-	// Fill in remaining commas after missionInfo so all rows have the 
-	// same number of columns
-	// logfile.println(F(",,,,")); 
-	// write a header line to the SD file
+	// write a 2nd header line to the SD file
 	logfile.println(F("POSIXt,DateTime,frac.seconds,Pressure.mbar,TempC"));
-
 	// Update the file's creation date, modify date, and access date.
 	logfile.timestamp(T_CREATE, time1.year(), time1.month(), time1.day(), 
 			time1.hour(), time1.minute(), time1.second());
@@ -951,18 +861,12 @@ void initFileName(DateTime time1) {
 } // end of initFileName function
 
 
-
-
 //------------------------------------------------------------------------------
 // endRun function.
 // If user presses button to trigger interrupt 0 (AVR pin PD2, Arduino D2)
 // then stop taking data and just flash the LED once in a while while sleeping
 void endRun ()
 {
-#if ECHO_TO_SERIAL
-	printTimeSerial(newtime, fracSec);
-	Serial.println(F("Ending program"));
-#endif
 	// cancel sleep as a precaution
 	sleep_disable();
 	// must do this as the pin will probably stay low for a while
@@ -984,7 +888,6 @@ void endRun ()
 	digitalWrite(LED, LOW); // Turn off LED if it was on
 
 	//--------------------------------------------------------------------------
-
 	// At this point we'll enter into an endless loop
 	// where the LED will flash briefly, then go back
 	// to sleep over and over again. Only a full reset
@@ -1018,7 +921,6 @@ void heartBeatInterrupt() {
 
 void heartBeat(void){
 				if (heartBeatCount < 10){
-						
 					digitalWrite(LED, HIGH); // also flash LED
 					delay(5);
 					digitalWrite(LED, LOW); // turn off LED
@@ -1034,33 +936,6 @@ void heartBeat(void){
 				heartBeatCount; // return value
 }
 
-
-//------------------------------------------------------------------------------
-// printTimeSerial function
-// Just a function to print a formatted date and time to the serial monitor
-void printTimeSerial(DateTime newtime, byte fracSec){
-	Serial.print(newtime.year(), DEC);
-	Serial.print(F("/"));
-	Serial.print(newtime.month(), DEC);
-	Serial.print(F("/"));
-	Serial.print(newtime.day(), DEC);
-	Serial.print(F(" "));
-	Serial.print(newtime.hour(), DEC);
-	Serial.print(F(":"));
-	if (newtime.minute() < 10) {
-		Serial.print(F("0"));
-	}
-	Serial.print(newtime.minute(), DEC);
-	Serial.print(F(":"));
-	if (newtime.second() < 10) {
-		Serial.print(F("0"));
-	}
-	Serial.print(newtime.second(), DEC);
-	Serial.print(F("."));
-	Serial.println(fracSec);
-}
-
-
 //-------------------------------------------------------------------------
 // Function beepbuzzer()
 // This function uses TIMER1 to toggle the BUZZER pin to drive a piezo 
@@ -1073,7 +948,6 @@ void beepbuzzer(void){
 	long toggle_count = 0;
 	uint32_t ocr = 0;
 	int8_t _pin = BUZZER;
-
 	
 	// Reset the 16 bit TIMER1 Timer/Counter Control Register A
     TCCR1A = 0;
@@ -1088,7 +962,6 @@ void beepbuzzer(void){
 	// can do direct port manipulation (which is fastest). 
     timer1_pin_port = portOutputRegister(digitalPinToPort(_pin));
     timer1_pin_mask = digitalPinToBitMask(_pin);
-	
 	
     // two choices for the 16 bit timers: ck/1 or ck/64
     ocr = F_CPU / frequency / 2 - 1;
@@ -1121,7 +994,6 @@ void beepbuzzer(void){
 	// throwing an interrupt every time the count equals the value of ocr stored
 	// in OCR1A above. The actual toggling of the pin to make noise happens in the 
 	// TIMER1_COMPA_vect interrupt service routine. 
-
 }
 
 //-----------------------------------------------------
@@ -1148,15 +1020,23 @@ ISR(TIMER1_COMPA_vect)
 }
 
 //----------------------------------------------------------------------------
+// Function getSettings()
+// This function retrieves mission parameters from a settings.txt file on 
+// the micro SD card, if the file is present. The file may have lines 
+// starting with slashes (/) for comments, so this routine skips those 
+// lines and looks for the first line with a format like: 
+// 0,60,my mission info
+// The first entry is assumed to be the startMinute value
+// The 2nd entry is assumed to be the dataDuration value
+// The 3rd entry is assumed to be the missionInfo
 void getSettings()
 {
   char character;
   char temporary[3];
   boolean valid;
- // Open the settings file for reading:
+  // Check if the setting.txt file exists in the root directory of the SD card
   if (sd.exists(setfilename)){
-
-   
+	// Open the settings file for reading:
 	setfile.open(setfilename, O_READ);
 	while (setfile.available()){
 		character = setfile.read(); // read first character in file
@@ -1273,12 +1153,6 @@ void getSettings()
 		}
 	}
 }
-
-
-
-
-
-
 
 //---------------------------------------------------------------------------
 // freeRam function. Used to report back on the current available RAM while
