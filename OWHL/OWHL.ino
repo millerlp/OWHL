@@ -73,7 +73,7 @@
 
 // Define a variable to use either the DS3231 32.768kHz signal (true) or 
 // an external 32.768kHz crystal (false). 
-boolean useClockCrystal = false;  
+boolean useClockCrystal = true;  
 
 
 const byte chipSelect = 10; // define the Chip Select pin for SD card
