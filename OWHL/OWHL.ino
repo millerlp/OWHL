@@ -91,7 +91,7 @@
 
 // Define a variable to use either the DS3231 32.768kHz signal (true) or 
 // an external 32.768kHz crystal (false). 
-boolean useClockCrystal = true;  
+boolean useClockCrystal = false;  
 
 const byte chipSelect = 10; // define the Chip Select pin for SD card
 // Declare initial name for output files written to SD card
@@ -179,6 +179,7 @@ void setup() {
 	beepbuzzer();
 	duration = 25; // reset buzzer beep duration
 	frequency = 4000; // reset buzzer frequency
+	
 
 	//--------RTC SETUP ------------
 	Wire.begin();
@@ -544,7 +545,7 @@ ISR(TIMER2_OVF_vect) {
 	if (f_wdt == 0) { // if flag is 0 when interrupt is called
 		f_wdt = 1; // set the flag to 1
 	} 
-	bitSet(PINC,1);
+	// bitSet(PINC,1);
 }
 
 //-----------------------------------------------------------------------------
