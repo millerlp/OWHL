@@ -34,7 +34,7 @@ directory.
 * MS5803-30BA: http://github.com/millerlp/MS5803_30 
 
 You also need the real time clock library and SdFat library.
-* RTClib: https://github.com/darkazazeal/rtclib
+* RTClib: https://github.com/mizraith/RTClib
 * SdFat: https://github.com/greiman/SdFat
 
 
