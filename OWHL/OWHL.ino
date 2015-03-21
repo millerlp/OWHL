@@ -189,9 +189,27 @@ void setup() {
 	
 	// Set Buzzer pin as output
 	pinMode(BUZZER, OUTPUT);
-	duration = 200; // lengthen duration of buzzer beep
-	frequency = 4000; // change pitch of buzzer (Hz)
-	beepbuzzer();
+	duration = 200;
+	frequency = 1000;
+	// Play a little ditty on startup
+	for (int i = 1000; i <=6000; i = i+500){
+		beepbuzzer();
+		delay(250);
+		frequency = i;
+	}
+	
+	// duration = 200; // lengthen duration of buzzer beep
+	// frequency = 2000; // change pitch of buzzer (Hz)
+	// beepbuzzer();
+	// delay(200);
+	// duration = 200; // lengthen duration of buzzer beep
+	// frequency = 4000; // change pitch of buzzer (Hz)
+	// beepbuzzer();
+	// delay(200);
+	// duration = 200; // lengthen duration of buzzer beep
+	// frequency = 6000; // change pitch of buzzer (Hz)
+	// beepbuzzer();
+	// delay(200);
 	duration = 25; // reset buzzer beep duration
 	frequency = 4000; // reset buzzer frequency
 	
