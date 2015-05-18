@@ -19,6 +19,10 @@ file, which is typically found in the `hardware/arduino/` directory.
 * Eagle_files - This directory contains Eagle CAD designs for the 
 OWHL printed circuit boards. 
 
+* R_files/OWHL - R scripts for dealing with OWHL data files.
+
+* setting_txt_example - This directory contains a sample settings.txt file that could be loaded on a SD card and read when the OWHL first starts up. 
+
 ### External libraries
 To make the OWHL run properly, you need to install one of the 
 MS5803 pressure sensor libraries I have written. They are 
