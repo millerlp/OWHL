@@ -1,0 +1,23 @@
+Partlist
+
+Exported from OWHL_MS5803_disc_RevB.sch at 10/1/2014 10:21:03 AM
+
+EAGLE Version 6.6.0 Copyright (c) 1988-2014 CadSoft
+
+Assembly variant: 
+
+Part     Value          Device     Package        Library  Sheet
+
+C5       0.1uF          C-USC0805  C0805          rcl      1
+JP1                     PINHD-1X6  1X06           adafruit 1
+JP2                     PINHD-1X6  1X06           adafruit 1
+JP3                     PINHD-1X6  1X06           adafruit 1
+JP4                     PINHD-1X3  1X03           adafruit 1
+JP5                     PINHD-1X3  1X03           adafruit 1
+JP6                     PINHD-1X3  1X03           adafruit 1
+JP7                     PINHD-1X3  1X03           adafruit 1
+R11      510ohm         R-US_R0805 R0805          resistor 1
+R12      510ohm         R-US_R0805 R0805          resistor 1
+U$1      JST-2PIN       JST-2PIN   JST-2-SMD-VERT miller   1
+U$2      JST-2PIN       JST-2PIN   JST-2-SMD-VERT miller   1
+U1       MS5803         MS5803     MS5803         miller   1
