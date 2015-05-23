@@ -82,7 +82,7 @@
 #include <SPI.h> // stock Arduino library
 #include <Wire.h> // stock Arduino library
 #include <RTClib.h> // https://github.com/mizraith/RTClib
-#include <RTC_DS3231.h> // https://github.com/mizraith/RTClib
+//#include <RTC_DS3231.h> // https://github.com/mizraith/RTClib
 #include <MS5803_14.h> // https://github.com/millerlp/MS5803_14
 #include <SdFat.h> // https://github.com/greiman/SdFat
 
@@ -262,7 +262,8 @@ void setup() {
 	// on its SQW pin (1024, 4096, 8192 Hz), though I don't use them
 	// in this sketch. The code below disables the SQW output to make
 	// sure it's not using any extra power
-	RTC.SQWEnable(false); // Stop the SQW output pin
+	//RTC.SQWEnable(false); // Stop the SQW output pin
+	RTC.enableOscillator(false, false, 0);
 	DateTime starttime = RTC.now(); // get initial time
 	//-------End RTC SETUP-----------
 
