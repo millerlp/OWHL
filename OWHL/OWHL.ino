@@ -81,8 +81,7 @@
  */
 #include <SPI.h> // stock Arduino library
 #include <Wire.h> // stock Arduino library
-#include <RTClib.h> // https://github.com/mizraith/RTClib
-//#include <RTC_DS3231.h> // https://github.com/mizraith/RTClib
+#include <RTClib.h> // https://github.com/millerlp/RTClib
 #include <MS5803_14.h> // https://github.com/millerlp/MS5803_14
 #include <SdFat.h> // https://github.com/greiman/SdFat
 
