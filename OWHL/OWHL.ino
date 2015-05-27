@@ -24,7 +24,7 @@
   The sketch:
   During setup, we enable the DS3231 RTC's 32.768kHz output hooked to 
   XTAL1 to provide a timed interrupt on TIMER2. 
-  The DS3231 32kHz pin should be connected to XTAL1, with a 10kOhm 
+  The DS3231 32kHz pin should be connected to XTAL1, with a 10k ohm 
   pull-up resistor between XTAL1 and +Vcc (3.3V). 
 
   We set the prescaler on TIMER2 so that it only interrupts
@@ -92,6 +92,8 @@
 #include <wiring_private.h>
 #include <avr/wdt.h>
 
+#define ECHO_TO_SERIAL 1 // echo data to serial port, set to 0 to turn off
+
 #define REEDSW 3 // Arduino pin D3, AVR pin PD3, aka INT1
 #define ERRLED 5 // Arduino pin D5, AVR pin PD5
 #define LED 6 	  // Arduino pin D6, AVR pin PD6
@@ -105,7 +107,8 @@
 
 const byte chipSelect = 10; // define the Chip Select pin for SD card
 // Declare initial name for output files written to SD card
-char filename[] = "LOGGER00.CSV";
+// The newer versions of SdFat library support long filenames
+char filename[] = "YYYYMMDD_HHMM_00.CSV";
 // Define name of settings file that may appear on SD card
 char setfilename[] = "settings.txt";  
 
@@ -170,7 +173,7 @@ SdFile setfile; // for sd card, this is the settings file to read from
 // SETUP loop
 void setup() {
 	
-	// Serial.begin(57600);
+	Serial.begin(57600);
 	pinMode(chipSelect, OUTPUT);  // set chip select pin for SD card to output
 	// Set indicator LEDs as output
 	pinMode(LED, OUTPUT);
@@ -239,8 +242,14 @@ void setup() {
 	// The DS3231 can also put out several different square waves
 	// on its SQW pin (1024, 4096, 8192 Hz), though I don't use them
 	// in this sketch. The code below disables the SQW output to make
-	// sure it's not using any extra power
-	RTC.enableOscillator(false, false, 0);
+	// sure it's not using any extra power.
+	RTC.enableOscillator(true, false, 0);
+
+ #if ECHO_TO_SERIAL	
+	// Print time to serial monitor. 
+	printTime(starttime);
+	Serial.println();
+#endif	
 	//-------End RTC SETUP-----------
 
 	// Initialize the SD card object
@@ -311,13 +320,17 @@ void setup() {
 
 	if (newtime.minute() >= startMinute && newtime.minute() <= endMinute){
 		// Create new file on SD card using initFileName() function
-		// This creates a filename based on the year + month + day
+		// This creates a filename based on the year, month, day,
+		// hour, and minute, 
 		// with a number indicating which number file this is on
 		// the given day. The format of the filename is
-		// YYMMDDXX.CSV where XX is the counter (00-99). The
+		// YYYYMMDD_HHMM_XX.CSV where XX is the counter (00-99). The
 		// function also writes the column headers to the new file.
-		initFileName(starttime);
-
+		initFileName(newtime);
+#if ECHO_TO_SERIAL		
+		Serial.print("Writing to ");
+		Serial.println(filename);
+#endif
 		// Start 32.768kHz clock signal on TIMER2. 
 		// Supply the current time value as the argument.
 		newtime = startTIMER2(newtime);
@@ -412,6 +425,12 @@ void loop() {
 				// Call the writeToSD function to output the data array contents
 				// to the SD card
 				writeToSD();
+#if ECHO_TO_SERIAL
+				printTime(newtime);
+				Serial.print("\t");
+				Serial.println(sensor.pressure());
+				delay(5);
+#endif				
 			} // end of if (loopCount >= (SAMPLES_PER_SECOND - 1))
 
 			// increment loopCount after writing all the sample data to
@@ -804,40 +823,70 @@ void writeToSD (void) {
 
 //------------------------------------------------------------------------------
 // initFileName - a function to create a filename for the SD card based
-// on the 2-digit year, month, and day. The character array 'filename'
-// was defined as a global variable at the top of the sketch
+// on the 4-digit year, month, day, hour, minutes and a 2-digit counter. 
+// The character array 'filename' was defined as a 20-character global array 
+// at the top of the sketch.
 void initFileName(DateTime time1) {
-	// Insert 2-digit year, month, and date into filename[] array
-	// decade (2014-2000) = 14/10 = 1
-	filename[0] = ((time1.year() - 2000) / 10) + '0'; 
-	// year  (2014-2000) = 14%10 = 4
-	filename[1] = ((time1.year() - 2000) % 10) + '0'; 
+	char buf[5];
+	// integer to ascii function itoa(), supplied with numeric year value,
+	// a buffer to hold output, and the base for the conversion (base 10 here)
+	itoa(time1.year(), buf, 10);
+	// copy the ascii year into the filename array
+	for (byte i = 0; i <= 4; i++){
+		filename[i] = buf[i];
+	}
+	// Insert the month value
 	if (time1.month() < 10) {
-		filename[2] = '0';
-		filename[3] = time1.month() + '0';
-	} else if (time1.month() >= 10) {
-		filename[2] = (time1.month() / 10) + '0';
-		filename[3] = (time1.month() % 10) + '0';
-	}
-	if (time1.day() < 10) {
 		filename[4] = '0';
-		filename[5] = time1.day() + '0';
-	} else if (time1.day() >= 10) {
-		filename[4] = (time1.day() / 10) + '0';
-		filename[5] = (time1.day() % 10) + '0';
+		filename[5] = time1.month() + '0';
+	} else if (time1.month() >= 10) {
+		filename[4] = (time1.month() / 10) + '0';
+		filename[5] = (time1.month() % 10) + '0';
 	}
+	// Insert the day value
+	if (time1.day() < 10) {
+		filename[6] = '0';
+		filename[7] = time1.day() + '0';
+	} else if (time1.day() >= 10) {
+		filename[6] = (time1.day() / 10) + '0';
+		filename[7] = (time1.day() % 10) + '0';
+	}
+	// Insert an underscore between date and time
+	filename[8] = '_';
+	// Insert the hour
+	if (time1.hour() < 10) {
+		filename[9] = '0';
+		filename[10] = time1.hour() + '0';
+	} else if (time1.hour() >= 10) {
+		filename[9] = (time1.hour() / 10) + '0';
+		filename[10] = (time1.hour() % 10) + '0';
+	}
+	// Insert minutes
+		if (time1.minute() < 10) {
+		filename[11] = '0';
+		filename[12] = time1.minute() + '0';
+	} else if (time1.minute() >= 10) {
+		filename[11] = (time1.minute() / 10) + '0';
+		filename[12] = (time1.minute() % 10) + '0';
+	}
+	// Insert another underscore after time
+	filename[13] = '_';
+		
 	// Next change the counter on the end of the filename
-	// (digits 6+7) to increment count for files generated on
+	// (digits 14+15) to increment count for files generated on
 	// the same day. This shouldn't come into play
 	// during a normal data run, but can be useful when 
 	// troubleshooting.
 	for (uint8_t i = 0; i < 100; i++) {
-		filename[6] = i / 10 + '0';
-		filename[7] = i % 10 + '0';
-		filename[8] = '.';
-		filename[9] = 'c';
-		filename[10] = 's';
-		filename[11] = 'v';
+		filename[14] = i / 10 + '0';
+		filename[15] = i % 10 + '0';
+		filename[16] = '.';
+		filename[17] = 'c';
+		filename[18] = 's';
+		filename[19] = 'v';
+		
+		
+		
 		if (!sd.exists(filename)) {
 			// when sd.exists() returns false, this block
 			// of code will be executed to open the file
@@ -848,12 +897,16 @@ void initFileName(DateTime time1) {
 				// to create the log file
 				bitSet(PINB, 0); // Toggle error led on PINB0 (D8 Arduino)
 				bitSet(PINB, 1); // Toggle indicator led on PINB1 (D9 Arduino)
+				delay(5);
 			}
 			break; // Break out of the for loop when the
 			// statement if(!logfile.exists())
 			// is finally false (i.e. you found a new file name to use).
 		} // end of if(!sd.exists())
 	} // end of file-naming for loop
+	
+	// Serial.println(filename);
+	
 	// Write 1st header line to SD file based on mission info
 	logfile.print(missionInfo);
 	logfile.print(F(","));
@@ -1172,6 +1225,33 @@ void getSettings()
 		}
 	}
 }
+
+//------------------------------------------------
+// printTime function takes a DateTime object from
+// the real time clock and prints the date and time 
+// to the serial monitor. 
+void printTime(DateTime now){
+	Serial.print(now.year(), DEC);
+    Serial.print('-');
+    Serial.print(now.month(), DEC);
+    Serial.print('-');
+    Serial.print(now.day(), DEC);
+    Serial.print(' ');
+    Serial.print(now.hour(), DEC);
+    Serial.print(':');
+	if (now.minute() < 10) {
+		Serial.print("0");
+	}
+    Serial.print(now.minute(), DEC);
+    Serial.print(':');
+	if (now.second() < 10) {
+		Serial.print("0");
+	}
+    Serial.print(now.second(), DEC);
+	// You may want to print a newline character
+	// after calling this function i.e. Serial.println();
+}
+
 
 //---------------------------------------------------------------------------
 // freeRam function. Used to report back on the current available RAM while
