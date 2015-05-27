@@ -10,7 +10,7 @@ dir1 = 'D:/Miller_projects/Electronics/OWHL/20150326_Field_test/Raw_data/'
 #files = dir(dir1, pattern = '*.CSV',include.dirs = FALSE, 
 #		recursive = FALSE)
 
-df = read.csv(paste0(dir1,'15032600.CSV'),
+df = read.csv(paste0(dir1,'15051500.CSV'),
 		colClasses = c('numeric','POSIXct','integer','numeric','numeric'),
 		skip = 1)
 # Add on the fractional seconds value
@@ -85,18 +85,18 @@ table(diffskip2)
 ###################################################
 # Plotting for a restricted portion of the dataset, by row numbers
 windows()
-starow = which.min(abs(df$DateTime - as.POSIXct('2015-03-26 12:30')))
-endrow = which.min(abs(df$DateTime - as.POSIXct('2015-03-26 12:32')))
-ylims = c(1050,3750)
+starow = which.min(abs(df$DateTime - as.POSIXct('2015-05-15 17:00')))
+endrow = which.min(abs(df$DateTime - as.POSIXct('2015-05-15 17:44:10')))
+ylims = c(1000,3750)
 ylims = range(df$Pressure.mbar[starow:endrow])
 cext = 2
-par(mar = c(5,4,1,4))
+par(mar = c(5,6,1,4))
 plot(Pressure.mbar~DateTime, data = df[starow:endrow,], type = 'l', las = 1,
 		ylim = ylims,
 		xlab = '',
 		ylab = 'Pressure, mbar',
 		cex.axis = cext)
-points(Pressure.mbar~DateTime, data = df[starow:endrow,], pch = 20)
+#points(Pressure.mbar~DateTime, data = df[starow:endrow,], pch = 20)
 usr1 = par()$usr
 par('usr' = c(usr1[1],usr1[2],45,90))
 lines(TempF~DateTime, data = df[starow:endrow,], col = 'blue')
