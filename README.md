@@ -41,5 +41,11 @@ You also need the real time clock library and SdFat library.
 * RTClib: https://github.com/millerlp/RTClib
 * SdFat: https://github.com/greiman/SdFat
 
+You must set the real time clock chip, DS3231, on the OWHL before attempting
+to upload the OWHL.ino program and collect data. 
 
-Developed under Arduino v1.0.5-r2. 
+To set the real time clock, look in the examples folder of RTClib and
+use the settime_exact.ino sketch (follow the instructions in the comments
+of that sketch). 
+
+Developed under Arduino v1.0.5-r2, rewritten to work with Arduino v1.6.4
