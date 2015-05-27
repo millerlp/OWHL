@@ -245,7 +245,7 @@ void setup() {
 	// sure it's not using any extra power.
 	RTC.enableOscillator(true, false, 0);
 
- #if ECHO_TO_SERIAL	
+#if ECHO_TO_SERIAL	
 	// Print time to serial monitor. 
 	printTime(starttime);
 	Serial.println();
@@ -1190,6 +1190,15 @@ void getSettings()
 		// to their defaults.
 		startMinute = STARTMINUTE;
 		dataDuration = DATADURATION;
+#if ECHO_TO_SERIAL
+		Serial.println(F("Could not find settings.txt"));
+		Serial.print(F("Using defaults: "));
+		Serial.print(startMinute);
+		Serial.print(F("\t"));
+		Serial.print(dataDuration);
+		Serial.print(F("\t"));
+		Serial.println(missionInfo);
+#endif
 		setfile.close();
 		return; // quit out of the function immediately
 		// The leds will not be flashed in this case, so if the user
@@ -1201,20 +1210,37 @@ void getSettings()
 	setfile.close();
 	
 	if (valid) {
-		// Flash green LED to notify user that settings were read from the 
-		// SD card. 
+		// Flash green LED 10 times to notify user that 
+		// settings were read from the SD card. 
 		for (int flsh = 0; flsh < 10; flsh++){
 				digitalWrite(LED, HIGH);
 				delay(100);
 				digitalWrite(LED, LOW);
 				delay(100);
 		}
+#if ECHO_TO_SERIAL
+		Serial.println(F("Read settings.txt: "));
+		Serial.print(startMinute);
+		Serial.print(F("\t"));
+		Serial.print(dataDuration);
+		Serial.print(F("\t"));
+		Serial.println(missionInfo);
+#endif
 	} else if (!valid){
 			// If one of the values wasn't valid, reset both
 			// to the default values.
 			startMinute = STARTMINUTE;
 			dataDuration = DATADURATION;
-			// Flash the red error led to notify the user that
+#if ECHO_TO_SERIAL
+		Serial.println(F("Invalid settings.txt entries."));
+		Serial.print(F("Using defaults: "));
+		Serial.print(startMinute);
+		Serial.print(F("\t"));
+		Serial.print(dataDuration);
+		Serial.print(F("\t"));
+		Serial.println(missionInfo);
+#endif			
+			// Flash the red error led 5 times to notify the user that
 			// the settings.txt file was read, but the values
 			// were not valid and will not be used. 
 			for (int flsh = 0; flsh < 5; flsh++){
