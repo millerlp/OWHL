@@ -82,6 +82,7 @@
 #include <SPI.h> // stock Arduino library
 #include <Wire.h> // stock Arduino library
 #include <RTClib.h> // https://github.com/millerlp/RTClib
+// #include <RTC_DS3231.h>
 #include <MS5803_14.h> // https://github.com/millerlp/MS5803_14
 #include <SdFat.h> // https://github.com/greiman/SdFat
 
@@ -172,7 +173,8 @@ SdFile setfile; // for sd card, this is the settings file to read from
 //---------------------------------------------------------
 // SETUP loop
 void setup() {
-
+	
+	// Serial.begin(57600);
 	pinMode(chipSelect, OUTPUT);  // set chip select pin for SD card to output
 	// Set indicator LED as output
 	pinMode(LED, OUTPUT);
@@ -186,31 +188,7 @@ void setup() {
 	// user if the unit is taking data.
 	pinMode(3, INPUT_PULLUP);
 	
-	// Set Buzzer pin as output
-	pinMode(BUZZER, OUTPUT);
-	duration = 200;
-	frequency = 1000;
-	// Play a little ditty on startup
-	for (int i = 1000; i <=6000; i = i+500){
-		beepbuzzer();
-		delay(250);
-		frequency = i;
-	}
-	
-	// duration = 200; // lengthen duration of buzzer beep
-	// frequency = 2000; // change pitch of buzzer (Hz)
-	// beepbuzzer();
-	// delay(200);
-	// duration = 200; // lengthen duration of buzzer beep
-	// frequency = 4000; // change pitch of buzzer (Hz)
-	// beepbuzzer();
-	// delay(200);
-	// duration = 200; // lengthen duration of buzzer beep
-	// frequency = 6000; // change pitch of buzzer (Hz)
-	// beepbuzzer();
-	// delay(200);
-	duration = 25; // reset buzzer beep duration
-	frequency = 4000; // reset buzzer frequency
+
 	
 
 	//--------RTC SETUP ------------
@@ -255,14 +233,14 @@ void setup() {
           //------------------------
         }
 
-	RTC.enable32kHz(false); // Stop 32.768kHz output from Chronodot
+	RTC.enable32kHz(false); // Stop 32.768kHz output from DS3231 for now
 	
 	// The Chronodot can also put out several different square waves
 	// on its SQW pin (1024, 4096, 8192 Hz), though I don't use them
 	// in this sketch. The code below disables the SQW output to make
 	// sure it's not using any extra power
-	//RTC.SQWEnable(false); // Stop the SQW output pin
 	RTC.enableOscillator(false, false, 0);
+	
 	DateTime starttime = RTC.now(); // get initial time
 	//-------End RTC SETUP-----------
 
@@ -305,11 +283,25 @@ void setup() {
 	// Start MS5803 pressure sensor
 	sensor.initializeMS_5803();
 	
+	
+	// Set Buzzer pin as output
+	pinMode(BUZZER, OUTPUT);
+	duration = 200;
+	frequency = 1000;
+	// Play a little ditty on startup
+	for (int i = 1000; i <=6000; i = i+500){
+		beepbuzzer();
+		delay(250);
+		frequency = i;
+	}
+
+	duration = 25; // reset buzzer beep duration
+	frequency = 4000; // reset buzzer frequency
+	
 	//-------------------------------------------------------
-	// Create interrupt for INT1 (should be reed switch)
-	// The heartBeat interrupt service routine is defined below
-	// the main loop
-	// attachInterrupt(1, heartBeatInterrupt, LOW);
+	// Set the heartBeatFlag to 1, which will cause it to
+	// initially beep during the first few seconds of data
+	// collection. 
 	heartBeatFlag = 1; // Immediately beep on start up.
 	
 	//--------------------------------------------------------
@@ -378,7 +370,6 @@ void loop() {
 		// If the current minute is >= than startMinute and <= endMinute, 
 		// then take data
 		if (newtime.minute() >= startMinute && newtime.minute() <= endMinute) {
-	
 			// Check to see if the current seconds value
 			// is equal to oldtime.second(). If so, we
 			// are still in the same second. If not,
@@ -387,7 +378,7 @@ void loop() {
 			if (oldtime.second() != newtime.second()) {
 				fracSec = 0; // reset fracSec
 				oldtime = newtime; // update oldtime
-				loopCount = 0; // reset loopCount
+				loopCount = 0; // reset loopCount				
 			}
 			
 			// Save current time to unixtimeArray
@@ -421,8 +412,6 @@ void loop() {
 					// Update oldday value to match the new day
 					oldday = oldtime.day();
 				}
-				//      bitSet(PINB,1); // used to visualize timing with LED or oscilloscope
-
 				// Call the writeToSD function to output the data array contents
 				// to the SD card
 				writeToSD();
@@ -430,8 +419,8 @@ void loop() {
 
 			// increment loopCount after writing all the sample data to
 			// the arrays
-			loopCount = loopCount++;
-
+			loopCount++; 
+			
 			// Increment the fractional seconds count
 #if SAMPLES_PER_SECOND == 4
 			fracSec = fracSec + 25;
@@ -441,7 +430,7 @@ void loop() {
 			fracSec = fracSec + 50;
 #endif
 			goToSleep(); // call the goToSleep function (below)
-		
+
 		//***************************************************************
 		//***************************************************************	
 		} else if (newtime.minute() < startMinute){
@@ -479,11 +468,13 @@ void loop() {
 		//***************************************************************
 		//***************************************************************
 		} else if (newtime.minute() > endMinute && newtime.minute() != wakeMinute){
+			// If the newtime minute is later than endMinute, and it's not a wakeMinute,
+			// then shut down the 32kHz oscillator and go into lowPowerSleep mode with
+			// the watchdog timer.
 			if (heartBeatFlag) {
 				heartBeat(); // call the heartBeat function
 				delay(duration); // delay long enough to play the sound
 			}
-			
 			TIMSK2 = 0; // stop TIMER2 interrupts
 			// If we are past endMinute, enter lowPowerSleep (shuts off TIMER2)
 			// Turn off the RTC's 32.768kHz clock signal
@@ -578,7 +569,6 @@ ISR(TIMER2_OVF_vect) {
 	if (f_wdt == 0) { // if flag is 0 when interrupt is called
 		f_wdt = 1; // set the flag to 1
 	} 
-	// bitSet(PINC,1);
 }
 
 //-----------------------------------------------------------------------------
@@ -587,19 +577,17 @@ ISR(TIMER2_OVF_vect) {
 // This is a higher power sleep mode than the lowPowerSleep function uses.
 void goToSleep()
 {
+	// Create three variables to hold the current status register contents
 	byte adcsra, mcucr1, mcucr2;
-	// bitSet(PINB,1); // flip pin PB1 (digital pin 9) to indicate start of sleep cycle
-
 	// Cannot re-enter sleep mode within one TOSC cycle. 
 	// This provides the needed delay.
 	OCR2A = 0; // write to OCR2A, we're not using it, but no matter
 	while (ASSR & _BV(OCR2AUB)) {} // wait for OCR2A to be updated
-
+	// Set the sleep mode to PWR_SAVE, which allows TIMER2 to wake the AVR
 	set_sleep_mode(SLEEP_MODE_PWR_SAVE);
 	adcsra = ADCSRA; // save the ADC Control and Status Register A
 	ADCSRA = 0; // disable ADC
 	sleep_enable();
-
 	// Do not interrupt before we go to sleep, or the
 	// ISR will detach interrupts and we won't wake.
 	noInterrupts ();
@@ -762,7 +750,7 @@ DateTime startTIMER2(bool start32k, DateTime currTime){
 // data arrays and writes them to the SD card file in a
 // comma-separated value format.
 void writeToSD (void) {
-	// bitSet(PIND, 6); // Toggle LED for monitoring
+	// bitSet(PINC, 1); // Toggle LED for monitoring
 //	bitSet(PIND, 7); // Toggle Arduino pin 7 for oscilloscope monitoring
 	
 	// Reopen logfile. If opening fails, notify the user
@@ -959,11 +947,13 @@ void heartBeat(void){
 					delay(5);
 					digitalWrite(LED, LOW); // turn off LED
 					beepbuzzer(); // Play tone on Arduino pin 7 (PD7)
-					heartBeatCount = heartBeatCount++; // increment counter
+					heartBeatCount++; // increment counter
 				} else {
 					// If the heartbeat has executed 10 times, shut if off,
 					// reactivate the heartbeat interrupt, and reset the counter
 					heartBeatFlag = 0;
+					// Register the heartBeatInterrupt service routine on INT1, 
+					// triggered whenever INT1 is pulled low.
 					attachInterrupt(1, heartBeatInterrupt, LOW);
 					heartBeatCount = 0;
 				}
@@ -1139,7 +1129,7 @@ void getSettings()
 			// another comma, or once it's read more characters than will fit
 			// in the arraylen limit. 			
 			missionInfo[i] = character; // write next value to missionInfo
-			i = i++; // increment i
+			i++; // increment i
 			character = setfile.read(); // read next value
 		}
 		missionInfo[i] = '\0'; // terminate character string
