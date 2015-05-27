@@ -109,6 +109,7 @@ char filename[] = "LOGGER00.CSV";
 // Define name of settings file that may appear on SD card
 char setfilename[] = "settings.txt";  
 
+
 // Create variables to hold settings from SD card settings.txt file
 #define arraylen 50 // maximum number of characters in missionInfo array
 uint8_t startMinute; // changeable value for startMinute from settings.txt
