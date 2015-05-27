@@ -103,9 +103,6 @@
 
 #define SAMPLES_PER_SECOND 4// number of samples taken per second (4, 2, or 1)
 
-// Define a variable to use either the DS3231 32.768kHz signal (true) or 
-// an external 32.768kHz crystal (false). 
-boolean useClockCrystal = true;  
 
 const byte chipSelect = 10; // define the Chip Select pin for SD card
 // Declare initial name for output files written to SD card
@@ -234,7 +231,7 @@ void setup() {
 
 	RTC.enable32kHz(false); // Stop 32.768kHz output from DS3231 for now
 	
-	// The Chronodot can also put out several different square waves
+	// The DS3231 can also put out several different square waves
 	// on its SQW pin (1024, 4096, 8192 Hz), though I don't use them
 	// in this sketch. The code below disables the SQW output to make
 	// sure it's not using any extra power
@@ -318,11 +315,9 @@ void setup() {
 		// function also writes the column headers to the new file.
 		initFileName(starttime);
 
-		// Start 32.768kHz clock signal on TIMER2. Set argument to true
-		// if using a 32.768 signal from the DS3231 Chronodot on XTAL1, 
-		// or false if using a crystal on XTAL1/XTAL2. The 2nd argument
-		// should be the current time
-		newtime = startTIMER2(useClockCrystal, newtime);
+		// Start 32.768kHz clock signal on TIMER2. 
+		// Supply the current time value as the argument.
+		newtime = startTIMER2(newtime);
 		// Initialize oldtime and oldday values
 		oldtime = newtime;
 		oldday = oldtime.day();
@@ -536,7 +531,7 @@ void loop() {
 			}
 			
 			// If it is the wakeMinute, restart TIMER2
-			newtime = startTIMER2(useClockCrystal,newtime);
+			newtime = startTIMER2(newtime);
 			
 			// Go back to sleep with TIMER2 interrupts activated
 			goToSleep();
@@ -681,21 +676,19 @@ ISR(WDT_vect) {
 
 //--------------------------------------------------------------
 // startTIMER2 function
-// Starts the 32.768kHz clock signal being fed into XTAL1/2 to drive the
+// Starts the 32.768kHz clock signal being fed into XTAL1 to drive the
 // quarter-second interrupts used during data-collecting periods. 
-// Set the 1st argument true if using the 32kHz signal from a DS3231 Chronodot
-// real time clock, otherwise set the argument false if using a 32.768kHz 
-// clock crystal on XTAL1/XTAL2. Also supply a current DateTime time value. 
+// Supply a current DateTime time value. 
 // This function returns a DateTime value that can be used to show the 
 // current time when returning from this function. 
-DateTime startTIMER2(bool start32k, DateTime currTime){
+DateTime startTIMER2(DateTime currTime){
 	TIMSK2 = 0; // stop timer 2 interrupts
-	if (start32k){
-		RTC.enable32kHz(true);
-		ASSR = _BV(EXCLK); // Set EXCLK external clock bit in ASSR register
-		// The EXCLK bit should only be set if you're trying to feed the
-		// 32.768 clock signal from the Chronodot into XTAL1. 
-	}
+
+	RTC.enable32kHz(true);
+	ASSR = _BV(EXCLK); // Set EXCLK external clock bit in ASSR register
+	// The EXCLK bit should only be set if you're trying to feed the
+	// 32.768 clock signal from the Chronodot into XTAL1. 
+
 	ASSR = ASSR | _BV(AS2); // Set the AS2 bit, using | (OR) to avoid
 	// clobbering the EXCLK bit that might already be set. This tells 
 	// TIMER2 to take its clock signal from XTAL1/2
