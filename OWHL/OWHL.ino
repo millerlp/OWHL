@@ -92,7 +92,7 @@
 #include <wiring_private.h>
 #include <avr/wdt.h>
 
-#define ECHO_TO_SERIAL 1 // echo data to serial port, set to 0 to turn off
+#define ECHO_TO_SERIAL 1 // Echo data to serial port, set to 0 to turn off
 
 #define REEDSW 3 // Arduino pin D3, AVR pin PD3, aka INT1
 #define ERRLED 5 // Arduino pin D5, AVR pin PD5
