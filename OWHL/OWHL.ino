@@ -77,6 +77,21 @@
   while running. If the logger is in a lowPowerSleep state with
   8 second timeouts, the buzzer will only beep every 8 seconds
   after the reed switch is activated.
+  
+  Status indicators, in order of appearance:
+  1. Real time clock not set: 
+		Error LED on, Status LED blinks, slow beep
+  2. SD card not found: 
+		Error LED + Status LED blink, fast beep
+  3a. settings.txt not found, using defaults:
+		No indication
+  3b. settings.txt read successfully: 
+		Status LED flashes 10 times
+  3c. settings.txt read, but invalid entries: 
+		Error LED flashes 5 times
+  4. Data collection is beginning:
+		Buzzer plays a little tune,
+		followed by 10 beeps indicating data collection
  */
 #include <SPI.h> // stock Arduino library
 #include <Wire.h> // stock Arduino library
@@ -291,21 +306,20 @@ void setup() {
 	// Start MS5803 pressure sensor
 	sensor.initializeMS_5803();
 	
-	
+	//-------------------------------------------------
+	// Play a little ditty on successful startup
 	// Set Buzzer pin as output
 	pinMode(BUZZER, OUTPUT);
 	duration = 200;
 	frequency = 1000;
-	// Play a little ditty on startup
+	// Play a little ditty on successful startup
 	for (int i = 1000; i <=6000; i = i+500){
 		beepbuzzer();
 		delay(250);
 		frequency = i;
 	}
-
 	duration = 25; // reset buzzer beep duration
 	frequency = 4000; // reset buzzer frequency
-	
 	//-------------------------------------------------------
 	// Set the heartBeatFlag to 1, which will cause it to
 	// initially beep during the first few seconds of data
