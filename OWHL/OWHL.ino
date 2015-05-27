@@ -18,15 +18,14 @@
 	along with this program.  If not, see http://www.gnu.org/licenses/
 	
 	Written under Arduino 1.0.5-r2
+	Updated to run under Arduino 1.6.4
 	https://github.com/millerlp/OWHL 
   -------------------------------------------------------------------
   The sketch:
   During setup, we enable the DS3231 RTC's 32.768kHz output hooked to 
   XTAL1 to provide a timed interrupt on TIMER2. 
   The DS3231 32kHz pin should be connected to XTAL1, with a 10kOhm 
-  pull-up resistor between XTAL1 and +Vcc (3.3V). Alternatively, if
-  you wish to use a 32.768kHz crystal hooked to XTAL1 and XTAL2, 
-  change the value of useClockCrystal below to false.
+  pull-up resistor between XTAL1 and +Vcc (3.3V). 
 
   We set the prescaler on TIMER2 so that it only interrupts
   every 0.25 second (or change the value of SAMPLES_PER_SECOND in 
@@ -35,7 +34,7 @@
   interrupt (see ISR at the bottom), the statements in the
   main loop's if() statement should execute, including reading the
   time, reading the MS5803 sensor, printing those values to the
-  serial port, and then going to sleep via the goToSleep function.
+  microSD card, and then going to sleep via the goToSleep function.
   
   Change the STARTMINUTE and DATADURATION values in the preamble
   below to set when the unit should wake up and start taking 
@@ -185,16 +184,23 @@ void setup() {
 	pinMode(3, INPUT_PULLUP);
 	
 	//--------RTC SETUP ------------
-	// In this section the AVR will check and see if the real time clock
+	// In this section the AVR will check to see if the real time clock
 	// is running. The clock should normally have been previously set with a 
 	// separate sketch. If the clock is not running, the error LED
-	// will turn on permanently, the status led will blink, and the
+	// will turn on permanently, the status led will blink slowly, and the
 	// buzzer will play a low-pitched beep. The goal here is to force
 	// the user to have explicitly set the clock in the 
 	// desired time zone, and then not allow this sketch to alter that
 	// value unexpectedly. If you need to check the time, you can start
 	// the OWHL running, then stop it and read the time stamps in the
 	// microSD data file. 
+	// If you need to set your DS3231 real time clock for the first time,
+	// make sure you have the RTClib library installed (a copy can be found at
+	// https://github.com/millerlp/RTClib ). In the examples folder of 
+	// RTClib you will find the sketch settime_exact.ino, for setting the 
+	// clock (follow the instructions in the comments of that sketch) and
+	// the sketch gettime.ino for reading out the clock time via serial 
+	// monitor. 
 	Wire.begin();
 	RTC.begin(); // Start DS3231 real time clock
 	// Check to see if DS3231 RTC is running
@@ -203,22 +209,26 @@ void setup() {
 		frequency = 2000;
 		while(1){ // infinite loop due to RTC initialization error
 				digitalWrite(LED, HIGH);
-				delay(300);
+				delay(400);
 				digitalWrite(LED, LOW);
+				delay(400);
 				beepbuzzer();
 		}
 	} 
 	DateTime starttime = RTC.now(); // get initial time
 	// Perform a second simple check to see if the running clock
 	// is out of date. A running clock that has not been properly 
-	// set will default to a date of 2000-01-01.
+	// set will default to a date of 2000-01-01. A clock that has
+	// lost its battery backup and then had power reapplied will
+	// often come up with a 2000-01-01 date.
 	if (starttime.year() < 2015){
 		digitalWrite(ERRLED, HIGH);
 		frequency = 3000;
 		while(1){ // infinite loop due to RTC initialization error
 				digitalWrite(LED, HIGH);
-				delay(300);
+				delay(400);
 				digitalWrite(LED, LOW);
+				delay(400);
 				beepbuzzer();
 		}
 	}
