@@ -172,7 +172,7 @@ void setup() {
 	
 	// Serial.begin(57600);
 	pinMode(chipSelect, OUTPUT);  // set chip select pin for SD card to output
-	// Set indicator LED as output
+	// Set indicator LEDs as output
 	pinMode(LED, OUTPUT);
 	pinMode(ERRLED, OUTPUT);
 	// Set interrupt 0 (Arduino pin D2) as input, use internal pullup resistor
@@ -180,54 +180,48 @@ void setup() {
 	pinMode(2, INPUT_PULLUP);
 	
 	// Set interrupt 1 (Arduino pin D3) as input, use internal pullup resistor
-	// interrupt 1 is used to activate the heartbeat function that notifies the 
+	// Interrupt 1 is used to activate the heartbeat function that notifies the 
 	// user if the unit is taking data.
 	pinMode(3, INPUT_PULLUP);
 	
-
-	
-
 	//--------RTC SETUP ------------
+	// In this section the AVR will check and see if the real time clock
+	// is running. The clock should normally have been previously set with a 
+	// separate sketch. If the clock is not running, the error LED
+	// will turn on permanently, the status led will blink, and the
+	// buzzer will play a low-pitched beep. The goal here is to force
+	// the user to have explicitly set the clock in the 
+	// desired time zone, and then not allow this sketch to alter that
+	// value unexpectedly. If you need to check the time, you can start
+	// the OWHL running, then stop it and read the time stamps in the
+	// microSD data file. 
 	Wire.begin();
-	RTC.begin(); // Start Chronodot
-        // Check to see if DS3231 RTC is running
-        if (! RTC.isrunning()) {
-          //Serial.println("RTC is NOT running!");
-          // The following line sets the RTC to the date & time this sketch was compiled
-          RTC.adjust(DateTime(__DATE__, __TIME__));
-          // -----------------------
-          // Notify the user via the LEDs. Error LED should go on,
-          // while 2nd LED flashes 5 times
-          digitalWrite(ERRLED, HIGH);
-          for (int flsh = 0; flsh < 5; flsh++){
-            digitalWrite(LED, HIGH);
-            delay(100);
-            digitalWrite(LED, LOW);
-            delay(100);
-          }
-          digitalWrite(ERRLED, LOW); // turn error led back off
-          //------------------------
-        }
-        // Assuming the DS3231 RTC is running, 
-		// now check to see if DS3231 RTC time is behind
-        DateTime now = RTC.now();
-        DateTime compiled = DateTime(__DATE__, __TIME__);
-        if (now.unixtime() < compiled.unixtime()) {
-          //Serial.println("RTC is older than compile time!  Updating");
-          RTC.adjust(DateTime(__DATE__, __TIME__));
-                    // -----------------------
-          // Notify the user via the LEDs. Error LED should go on,
-          // while 2nd LED flashes 10 times
-          digitalWrite(ERRLED, HIGH);
-          for (int flsh = 0; flsh < 10; flsh++){
-            digitalWrite(LED, HIGH);
-            delay(100);
-            digitalWrite(LED, LOW);
-            delay(100);
-          }
-          digitalWrite(ERRLED, LOW); // turn error led back off
-          //------------------------
-        }
+	RTC.begin(); // Start DS3231 real time clock
+	// Check to see if DS3231 RTC is running
+	if (! RTC.isrunning()) {
+		digitalWrite(ERRLED, HIGH);
+		frequency = 2000;
+		while(1){ // infinite loop due to RTC initialization error
+				digitalWrite(LED, HIGH);
+				delay(300);
+				digitalWrite(LED, LOW);
+				beepbuzzer();
+		}
+	} 
+	DateTime starttime = RTC.now(); // get initial time
+	// Perform a second simple check to see if the running clock
+	// is out of date. A running clock that has not been properly 
+	// set will default to a date of 2000-01-01.
+	if (starttime.year() < 2015){
+		digitalWrite(ERRLED, HIGH);
+		frequency = 3000;
+		while(1){ // infinite loop due to RTC initialization error
+				digitalWrite(LED, HIGH);
+				delay(300);
+				digitalWrite(LED, LOW);
+				beepbuzzer();
+		}
+	}
 
 	RTC.enable32kHz(false); // Stop 32.768kHz output from DS3231 for now
 	
@@ -236,8 +230,6 @@ void setup() {
 	// in this sketch. The code below disables the SQW output to make
 	// sure it's not using any extra power
 	RTC.enableOscillator(false, false, 0);
-	
-	DateTime starttime = RTC.now(); // get initial time
 	//-------End RTC SETUP-----------
 
 	// Initialize the SD card object
