@@ -21,7 +21,9 @@ OWHL printed circuit boards.
 
 * R_files/OWHL - R scripts for dealing with OWHL data files.
 
-* setting_txt_example - This directory contains a sample settings.txt file that could be loaded on a SD card and read when the OWHL first starts up. 
+* serial_number_generator - This directory contains an Arduino sketch that can be used to generate and store a unique serial number on the ATmega328P EEPROM memory of an OWHL. The sketch only needs to be uploaded to the OWHL once to store the serial number. The main OWHL.ino program can retrieve this serial number and record it in every output data file. 
+
+* settings_txt_example - This directory contains a sample settings.txt file that could be loaded on a SD card and read when the OWHL first starts up. 
 
 ### External libraries
 To make the OWHL run properly, you need to install one of the 
