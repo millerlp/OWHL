@@ -1127,7 +1127,7 @@ void getSettings()
 	// Begin by retrieving the 17-digit serial number that may 
 	// or may not be burned into the eeprom memory of the ATmega chip
 	EEPROM.get(0, serialnumber);
-	if (serialnumber[0] != 'S') {
+	if (serialnumber[0] == 'S') {
 		serialValid = true;
 	}
 
@@ -1226,6 +1226,10 @@ void getSettings()
 		Serial.print(dataDuration);
 		Serial.print(F("\t"));
 		Serial.println(missionInfo);
+		if (serialValid){
+			Serial.print(F("Serial #: "));
+			Serial.println(serialnumber);
+		}
 #endif
 		setfile.close();
 		return; // quit out of the function immediately
@@ -1253,6 +1257,10 @@ void getSettings()
 		Serial.print(dataDuration);
 		Serial.print(F("\t"));
 		Serial.println(missionInfo);
+		if (serialValid){
+			Serial.print(F("Serial #: "));
+			Serial.println(serialnumber);
+		}
 #endif
 	} else if (!valid){
 			// If one of the values wasn't valid, reset both
@@ -1267,15 +1275,19 @@ void getSettings()
 		Serial.print(dataDuration);
 		Serial.print(F("\t"));
 		Serial.println(missionInfo);
+		if (serialValid){
+			Serial.print(F("Serial #: "));
+			Serial.println(serialnumber);
+		}
 #endif			
-			// Flash the red error led 5 times to notify the user that
-			// the settings.txt file was read, but the values
-			// were not valid and will not be used. 
-			for (int flsh = 0; flsh < 5; flsh++){
-			digitalWrite(ERRLED, HIGH);
-			delay(100);
-			digitalWrite(ERRLED, LOW);
-			delay(100);
+		// Flash the red error led 5 times to notify the user that
+		// the settings.txt file was read, but the values
+		// were not valid and will not be used. 
+		for (int flsh = 0; flsh < 5; flsh++){
+		digitalWrite(ERRLED, HIGH);
+		delay(100);
+		digitalWrite(ERRLED, LOW);
+		delay(100);
 		}
 	}
 }
