@@ -95,10 +95,10 @@
  */
 #include <SPI.h> // stock Arduino library
 #include <Wire.h> // stock Arduino library
-#include <RTClib.h> // https://github.com/millerlp/RTClib
-#include <MS5803_14.h> // https://github.com/millerlp/MS5803_14
-#include <SdFat.h> // https://github.com/greiman/SdFat
-
+#include "RTClib.h" // https://github.com/millerlp/RTClib
+#include "MS5803_14.h" // https://github.com/millerlp/MS5803_14
+#include "SdFat.h" // https://github.com/greiman/SdFat
+#include <EEPROM.h>
 // The following libraries should come with the normal Arduino 
 // distribution. 
 #include <avr/interrupt.h>
@@ -126,6 +126,8 @@ const byte chipSelect = 10; // define the Chip Select pin for SD card
 char filename[] = "YYYYMMDD_HHMM_00.CSV";
 // Define name of settings file that may appear on SD card
 char setfilename[] = "settings.txt";  
+// Define an array to hold the 17-digit serial number that may be in eeprom
+char serialnumber[17];
 
 
 // Create variables to hold settings from SD card settings.txt file
@@ -134,7 +136,8 @@ uint8_t startMinute; // changeable value for startMinute from settings.txt
 uint8_t dataDuration; // changeable value for dataDuration from settings.txt
 // Define character array to hold missionInfo from settings.txt
 char missionInfo[arraylen] = "Default mission information for csv file header"; 
-
+// Define a flag to show whether the serialnumber value is value or just zeros
+bool serialValid = 0;
 
 // Declare data arrays
 uint32_t unixtimeArray[SAMPLES_PER_SECOND]; // store unixtime values temporarily
@@ -922,6 +925,10 @@ void initFileName(DateTime time1) {
 	// Serial.println(filename);
 	
 	// Write 1st header line to SD file based on mission info
+	if (serialValid) {
+		logfile.print(serialnumber);
+		logfile.print(" ");
+	}
 	logfile.print(missionInfo);
 	logfile.print(F(","));
 	logfile.print(F("startMinute"));
@@ -1117,6 +1124,13 @@ ISR(TIMER1_COMPA_vect)
 // The 3rd entry is assumed to be the missionInfo
 void getSettings()
 {
+	// Begin by retrieving the 17-digit serial number that may 
+	// or may not be burned into the eeprom memory of the ATmega chip
+	EEPROM.get(0, serialnumber);
+	if (serialnumber[0] != 'S') {
+		serialValid = true;
+	}
+
   char character;
   char temporary[3];
   boolean valid;
