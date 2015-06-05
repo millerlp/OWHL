@@ -109,6 +109,8 @@
 #include <avr/wdt.h>
 
 #define ECHO_TO_SERIAL 1 // Echo data to serial port, set to 0 to turn off
+// Turning off ECHO_TO_SERIAL will save battery power, always turn it off 
+// during real deployments. 
 
 #define REEDSW 3 // Arduino pin D3, AVR pin PD3, aka INT1
 #define ERRLED 5 // Arduino pin D5, AVR pin PD5
