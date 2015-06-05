@@ -93,11 +93,12 @@
 		Buzzer plays a little tune,
 		followed by 10 beeps indicating data collection
  */
+#include "SdFat.h" // https://github.com/greiman/SdFat
 #include <SPI.h> // stock Arduino library
 #include <Wire.h> // stock Arduino library
 #include "RTClib.h" // https://github.com/millerlp/RTClib
 #include "MS5803_14.h" // https://github.com/millerlp/MS5803_14
-#include "SdFat.h" // https://github.com/greiman/SdFat
+
 #include <EEPROM.h>
 // The following libraries should come with the normal Arduino 
 // distribution. 
