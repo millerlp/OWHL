@@ -14,7 +14,7 @@ Arduino folder where your other sketches are normally stored.
 
 * boards_txt_entry - This contains a text file whose contents 
 should be copied and pasted into the standard Arduino `boards.txt`
-file, which is typically found in the `hardware/arduino/` directory.
+file. On Windows, this file is found in the arduino installation folder, for example:`arduino-1.6.4/hardware/arduino/avr/boards.txt`. On Mac OS X, this file is found by going to your Applications folder, long-clicking on Arduino.app, and choosing "Show package contents". Then in the Contents folder that opens up, go to `Contents/Java/hardware/arduino/avr/boards.txt`.
 
 * Eagle_files - This directory contains Eagle CAD designs for the 
 OWHL printed circuit boards. 
