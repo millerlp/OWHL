@@ -108,7 +108,7 @@
 #include <wiring_private.h>
 #include <avr/wdt.h>
 
-#define ECHO_TO_SERIAL 1 // Echo data to serial port, set to 0 to turn off
+#define ECHO_TO_SERIAL // Echo data to serial port, comment out this line to turn off
 // Turning off ECHO_TO_SERIAL will save battery power, always turn it off 
 // during real deployments. 
 
