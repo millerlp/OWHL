@@ -266,7 +266,7 @@ void setup() {
 	// sure it's not using any extra power.
 	RTC.enableOscillator(true, false, 0);
 
-#if ECHO_TO_SERIAL	
+#ifdef ECHO_TO_SERIAL	
 	// Print time to serial monitor. 
 	printTime(starttime);
 	Serial.println();
@@ -347,7 +347,7 @@ void setup() {
 		// YYYYMMDD_HHMM_XX.CSV where XX is the counter (00-99). The
 		// function also writes the column headers to the new file.
 		initFileName(newtime);
-#if ECHO_TO_SERIAL		
+#ifdef ECHO_TO_SERIAL		
 		Serial.print("Writing to ");
 		Serial.println(filename);
 #endif
@@ -445,7 +445,7 @@ void loop() {
 				// Call the writeToSD function to output the data array contents
 				// to the SD card
 				writeToSD();
-#if ECHO_TO_SERIAL
+#ifdef ECHO_TO_SERIAL
 				printTime(newtime);
 				Serial.print("\t");
 				Serial.println(sensor.pressure());
@@ -1221,7 +1221,7 @@ void getSettings()
 		// to their defaults.
 		startMinute = STARTMINUTE;
 		dataDuration = DATADURATION;
-#if ECHO_TO_SERIAL
+#ifdef ECHO_TO_SERIAL
 		Serial.println(F("Could not find settings.txt"));
 		Serial.print(F("Using defaults: "));
 		Serial.print(startMinute);
@@ -1253,7 +1253,7 @@ void getSettings()
 				digitalWrite(LED, LOW);
 				delay(100);
 		}
-#if ECHO_TO_SERIAL
+#ifdef ECHO_TO_SERIAL
 		Serial.println(F("Read settings.txt: "));
 		Serial.print(startMinute);
 		Serial.print(F("\t"));
@@ -1270,7 +1270,7 @@ void getSettings()
 			// to the default values.
 			startMinute = STARTMINUTE;
 			dataDuration = DATADURATION;
-#if ECHO_TO_SERIAL
+#ifdef ECHO_TO_SERIAL
 		Serial.println(F("Invalid settings.txt entries."));
 		Serial.print(F("Using defaults: "));
 		Serial.print(startMinute);
