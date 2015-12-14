@@ -4,7 +4,7 @@ The code in this repository runs a pressure sensor data logger
 that can be used to log wave heights over long periods of time. 
 It is meant to be placed in 10m of water, where it then records pressure 
 via a MS5803 pressure sensor and writes to a microSD card. See 
-http://lukemiller.org/index.php/2014/08/open-wave-height-logger/ for
+http://lukemiller.org/index.php/category/open-wave-height-logger/ for
 more information.
 
 ### Directories
@@ -47,7 +47,9 @@ You must set the real time clock chip, DS3231, on the OWHL before attempting
 to upload the OWHL.ino program and collect data. 
 
 To set the real time clock, look in the examples folder of RTClib and
-use the settime_exact.ino sketch (follow the instructions in the comments
-of that sketch). 
+use the settime_Serial.ino sketch. Load that sketch onto the OWHL. Open the
+Arduino Serial Monitor window and enter the date and time, then hit enter to
+write the values to the DS3231 clock chip. You can then load the main 
+OWHL.ino sketch onto the OWHL to log data.  
 
 Developed under Arduino v1.0.5-r2, rewritten to work with Arduino v1.6.4
