@@ -96,8 +96,8 @@
 #include "SdFat.h" // https://github.com/greiman/SdFat or https://github.com/millerlp/SdFat
 #include <SPI.h> // stock Arduino library
 #include <Wire.h> // stock Arduino library
-#include "RTClib.h" // https://github.com/millerlp/RTClib
-#include "MS5803_14.h" // https://github.com/millerlp/MS5803_14
+#include "RTClib.h" // https://github.com/millerlp/RTClib, for the DS3231 clock
+#include "MS5803_14.h" // https://github.com/millerlp/MS5803_14, for the pressure sensor
 
 #include <EEPROM.h>
 // The following libraries should come with the normal Arduino 
