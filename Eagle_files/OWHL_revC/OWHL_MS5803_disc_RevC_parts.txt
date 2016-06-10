@@ -1,0 +1,17 @@
+Partlist exported from D:/Dropbox/Eagle/Eagle_projects/OWHL_revC/OWHL_MS5803_disc_RevC.sch at 6/10/2016 07:29:59
+
+Part      Value                       Device                      Package         Description                                          
+C5        0.1uF                       C-USC0805                   C0805           CAPACITOR, American symbol                           
+FTDI_HDR                              PINHD-1X6                   1X06            PIN HEADER                                           
+H1        HOLE-LAYOUT4-40-SOCKET-HEAD HOLE-LAYOUT4-40-SOCKET-HEAD 4-40-SCREW-HOLE Drill hole                                           
+H2        HOLE-LAYOUT4-40-SOCKET-HEAD HOLE-LAYOUT4-40-SOCKET-HEAD 4-40-SCREW-HOLE Drill hole                                           
+H3        HOLE-LAYOUT4-40-SOCKET-HEAD HOLE-LAYOUT4-40-SOCKET-HEAD 4-40-SCREW-HOLE Drill hole                                           
+H4        HOLE-LAYOUT4-40-SOCKET-HEAD HOLE-LAYOUT4-40-SOCKET-HEAD 4-40-SCREW-HOLE Drill hole                                           
+H5        HOLE-LAYOUT4-40-SOCKET-HEAD HOLE-LAYOUT4-40-SOCKET-HEAD 4-40-SCREW-HOLE Drill hole                                           
+I2C_HDR                               PINHD-1X6                   1X06            PIN HEADER                                           
+JP4                                   PINHD-1X3                   1X03            PIN HEADER                                           
+JP6                                   PINHD-1X3                   1X03            PIN HEADER                                           
+JP7                                   PINHD-1X3                   1X03            PIN HEADER                                           
+SPI_HDR                               PINHD-1X6                   1X06            PIN HEADER                                           
+STANDOFF1 STAND-OFF                   STAND-OFF                   STAND-OFF       #4 Stand Off                                         
+U1        MS5803                      MS5803                      MS5803          MS5803 Pressure sensor from Measurement Specialties. 

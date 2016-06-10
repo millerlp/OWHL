@@ -1,0 +1,24 @@
+Partlist exported from D:/Dropbox/Eagle/Eagle_projects/OWHL_revC/OWHL_POWER_RevC.sch at 6/10/2016 07:29:21
+
+Part        Value                        Device                       Package                           Description                                                        
+BUTTON1     PUSHBUTTON_DPST_SMDSTANDARD  PUSHBUTTON_DPST_SMDSTANDARD  PUSHBUTTON_DPST_SMD               PUSHBUTTON DPST SMD                                                
+C1          22µF                         CPOL-US0805                  C0805_POL                         POLARIZED CAPACITOR, American symbol                               
+C2          0.1µF                        CAP0805                      0805                              Capacitor                                                          
+C3          1 uF                         CPOL-USB                     PANASONIC_B                       POLARIZED CAPACITOR, American symbol                               
+C4          1 uF                         CPOL-USB                     PANASONIC_B                       POLARIZED CAPACITOR, American symbol                               
+FTDI_HDR                                 PINHD-1X6                    1X06                              PIN HEADER                                                         
+I2C_HDR                                  PINHD-1X6                    1X06                              PIN HEADER                                                         
+JUMPER_NC   SOLDER_JUMPER_TRACESTANDARD  SOLDER_JUMPER_TRACESTANDARD  SJ_2S-TRACE                       Solder jumper with trace                                           
+JUMPER_OPEN SOLDER_JUMPER_NO_TRACESILK   SOLDER_JUMPER_NO_TRACESILK   SJ_2S-NO                          Solder jumper pads with no trace.                                  
+LED1                                     LEDCHIPLED_0805              CHIPLED_0805                      LED                                                                
+LED2                                     LEDCHIPLED_0805              CHIPLED_0805                      LED                                                                
+POWER_PLUG  JST-2PIN                     JST-2PIN                     JST-2-SMD-VERT                    JST B2B-PH-SM4-TM 2-pin connector                                  
+R1          100k O                       R-US_R0805                   R0805                             RESISTOR, American symbol                                          
+R2          100k O                       R-US_R0805                   R0805                             RESISTOR, American symbol                                          
+R7          510 ohm                      R-US_R0805                   R0805                             RESISTOR, American symbol                                          
+R8          510 ohm                      R-US_R0805                   R0805                             RESISTOR, American symbol                                          
+RESET       PUSHBUTTON_DPST_SMDSTANDARD  PUSHBUTTON_DPST_SMDSTANDARD  PUSHBUTTON_DPST_SMD               PUSHBUTTON DPST SMD                                                
+SPI_HDR                                  PINHD-1X6                    1X06                              PIN HEADER                                                         
+STANDOFF1   STAND-OFF                    STAND-OFF                    STAND-OFF                         #4 Stand Off                                                       
+U$2         MICROSD_MOLEX_REVERSECURRENT MICROSD_MOLEX_REVERSECURRENT MICROSD_SOCKET_MOLEX_REVERSEMOUNT Molex micro SD connector, push-push spring loaded, "reverse" mount 
+VREG        MCP1700T-3002E/TT            MCP1700T-3002E/TT            SOT95P237X112-3N                  Low Quiescent Current LDO 3.0V, 250mA                              
