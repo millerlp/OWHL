@@ -2,7 +2,8 @@
 
 The code in this repository runs a pressure sensor data logger 
 that can be used to log wave heights over long periods of time. 
-It is meant to be placed in 10m of water, where it then records pressure 
+It is meant to be placed in 5-10m of water, where it then records 
+absolute pressure (water + atmosphere)
 via a MS5803 pressure sensor and writes to a microSD card. See 
 http://lukemiller.org/index.php/category/open-wave-height-logger/ for
 more information.
@@ -17,7 +18,8 @@ should be copied and pasted into the standard Arduino `boards.txt`
 file. On Windows, this file is found in the arduino installation folder, for example:`arduino-1.6.4/hardware/arduino/avr/boards.txt`. On Mac OS X, this file is found by going to your Applications folder, long-clicking on Arduino.app, and choosing "Show package contents". Then in the Contents folder that opens up, go to `Contents/Java/hardware/arduino/avr/boards.txt`.
 
 * Eagle_files - This directory contains Eagle CAD designs for the 
-OWHL printed circuit boards. 
+OWHL printed circuit boards. Revision C is the current version (circa mid-2016) and is not 
+physically compatible with the earlier revisions. The same software works on all hardware versions.
 
 * R_files/OWHL - R scripts for dealing with OWHL data files.
 
@@ -48,8 +50,9 @@ to upload the OWHL.ino program and collect data.
 
 To set the real time clock, look in the examples folder of RTClib and
 use the settime_Serial.ino sketch. Load that sketch onto the OWHL. Open the
-Arduino Serial Monitor window and enter the date and time, then hit enter to
+Arduino Serial Monitor window (use the 57600 baud speed setting) and enter the 
+date and time, then hit enter to
 write the values to the DS3231 clock chip. You can then load the main 
 OWHL.ino sketch onto the OWHL to log data.  
 
-Developed under Arduino v1.0.5-r2, rewritten to work with Arduino v1.6.4
+Developed under Arduino v1.0.5-r2, rewritten to work with Arduino v1.6.6
