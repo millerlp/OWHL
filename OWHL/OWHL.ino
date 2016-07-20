@@ -222,7 +222,7 @@ void setup() {
 	// If you need to set your DS3231 real time clock for the first time,
 	// make sure you have the RTClib library installed (a copy can be found at
 	// https://github.com/millerlp/RTClib ). In the examples folder of 
-	// RTClib you will find the sketch settime_exact.ino, for setting the 
+	// RTClib you will find the sketch settime_Serial.ino, for setting the 
 	// clock (follow the instructions in the comments of that sketch) and
 	// the sketch gettime.ino for reading out the clock time via serial 
 	// monitor. 
