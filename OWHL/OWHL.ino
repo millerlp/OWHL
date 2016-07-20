@@ -93,11 +93,11 @@
 		Buzzer plays a little tune,
 		followed by 10 beeps indicating data collection
  */
-#include "SdFat.h" // https://github.com/greiman/SdFat or https://github.com/millerlp/SdFat
+#include "SdFat.h" // https://github.com/greiman/SdFat
 #include <SPI.h> // stock Arduino library
 #include <Wire.h> // stock Arduino library
-#include "RTClib.h" // https://github.com/millerlp/RTClib, for the DS3231 clock
-#include "MS5803_14.h" // https://github.com/millerlp/MS5803_14, for the pressure sensor
+#include "RTClib.h" // https://github.com/millerlp/RTClib
+#include "MS5803_14.h" // https://github.com/millerlp/MS5803_14
 
 #include <EEPROM.h>
 // The following libraries should come with the normal Arduino 
@@ -360,7 +360,7 @@ void setup() {
 		// set f_wdt flag to 1 so we start taking data in the main loop
 		f_wdt = 1;
 		
-	} else if ( (newtime.minute() < startMinute) | (newtime.minute() > endMinute) ){
+	} else if (newtime.minute() < startMinute | newtime.minute() > endMinute){
 		// The current minute is earlier or later in the hour than the user has 
 		// specified for taking data.
 		oldtime = newtime;
@@ -784,9 +784,8 @@ DateTime startTIMER2(DateTime currTime){
 // data arrays and writes them to the SD card file in a
 // comma-separated value format.
 void writeToSD (void) {
-	// bitSet(PINC, 1); // Toggle LED for monitoring
-//	bitSet(PIND, 7); // Toggle Arduino pin 7 for oscilloscope monitoring
-	
+
+	digitalWrite(ERRLED, LOW); // shut off error LED if it was previously on
 	// Reopen logfile. If opening fails, notify the user
 	if (!logfile.isOpen()) {
 		if (!logfile.open(filename, O_RDWR | O_CREAT | O_AT_END)) {
@@ -905,7 +904,7 @@ void initFileName(DateTime time1) {
 		filename[18] = 's';
 		filename[19] = 'v';
 		
-		
+		digitalWrite(ERRLED, LOW); // shut off error LED if it was previously on
 		
 		if (!sd.exists(filename)) {
 			// when sd.exists() returns false, this block
@@ -913,11 +912,9 @@ void initFileName(DateTime time1) {
 			if (!logfile.open(filename, O_RDWR | O_CREAT | O_AT_END)) {
 				// If there is an error opening the file, notify the
 				// user. Otherwise, the file is open and ready for writing
-				// Turn both indicator LEDs on to indicate a failure
+				// Turn on red LED to indicate a failure
 				// to create the log file
-				bitSet(PINB, 0); // Toggle error led on PINB0 (D8 Arduino)
-				bitSet(PINB, 1); // Toggle indicator led on PINB1 (D9 Arduino)
-				delay(5);
+                                digitalWrite(ERRLED, HIGH); // Toggle error LED on
 			}
 			break; // Break out of the for loop when the
 			// statement if(!logfile.exists())
