@@ -245,8 +245,10 @@ void setup() {
 	// is out of date. A running clock that has not been properly 
 	// set will default to a date of 2000-01-01. A clock that has
 	// lost its battery backup and then had power reapplied will
-	// often come up with a 2000-01-01 date.
-	if (starttime.year() < 2015){
+	// often come up with a 2000-01-01 date. Alternatively, if the year
+  // returns as 2165, it indicates a communication problem
+  // usually due to bad wiring or a solder bridge between 2 pins. 
+	if (starttime.year() < 2019 | starttime.year() >= 2165){
 		digitalWrite(ERRLED, HIGH);
 		frequency = 3000;
 		while(1){ // infinite loop due to RTC initialization error
