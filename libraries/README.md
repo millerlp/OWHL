@@ -1,7 +1,7 @@
 ## Libraries for OWHL - Open Wave Height Logger
 
 This `libraries/` directory contains working copies of the external libraries
-needed for the main OWHL.ino program to compile and upload. To use these
+needed for the main `OWHL.ino` program to compile and upload. To use these
 files, copy each library's folder into your `Arduino/libraries/` directory
 where you have installed the Arduino application. 
 

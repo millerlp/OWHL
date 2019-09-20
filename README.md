@@ -8,12 +8,14 @@ via a MS5803 pressure sensor and writes to a microSD card. See
 http://lukemiller.org/index.php/category/open-wave-height-logger/ for
 more information.
 
-### Directories
-* OWHL - This contains the Arduino `OWHL.ino` file to run the Open 
+### Directories and files
+* `OWHL/` - This contains the Arduino `OWHL.ino` file to run the Open 
 Wave Height Logger. This directory should be placed in your
 Arduino folder where your other sketches are normally stored.
 
-* boards_txt_entry - This contains a text file whose contents 
+* `libaries/` - This directory contains archived copies of the external libraries necessary to compile and run the `OWHL.ino` program with the Arduino software. See the External libraries section below for information on installing these files or obtaining current versions of the libraries from their respective repositories. 
+
+* `boards_txt_entry` - This contains a text file whose contents 
 should be copied and pasted into the standard Arduino `boards.txt`
 file. On Windows, this file is found in the arduino installation folder, for example:`arduino-1.6.4/hardware/arduino/avr/boards.txt`. On Mac OS X, this file is found by going to your Applications folder, long-clicking on Arduino.app, and choosing "Show package contents". Then in the Contents folder that opens up, go to `Contents/Java/hardware/arduino/avr/boards.txt`.
 
