@@ -19,23 +19,24 @@ Arduino folder where your other sketches are normally stored.
 should be copied and pasted into the standard Arduino `boards.txt`
 file. On Windows, this file is found in the arduino installation folder, for example:`arduino-1.6.4/hardware/arduino/avr/boards.txt`. On Mac OS X, this file is found by going to your Applications folder, long-clicking on Arduino.app, and choosing "Show package contents". Then in the Contents folder that opens up, go to `Contents/Java/hardware/arduino/avr/boards.txt`.
 
-* Eagle_files - This directory contains Eagle CAD designs for the 
+* `Eagle_files/` - This directory contains Eagle CAD designs for the 
 OWHL printed circuit boards. Revision C is the current version (circa mid-2016) and is not 
 physically compatible with the earlier revisions. The same software works on all hardware versions.
 
-* R_files/OWHL - R scripts for dealing with OWHL data files.
+* `R_files/OWHL/` - R scripts for dealing with OWHL data files. Also see the `oceanwaves` repository at http://github.com/millerlp/oceanwaves for more information on processing OWHL pressure data into statistical summaries of wave climate.
 
-* serial_number_generator - This directory contains an Arduino sketch that can be used to generate and store a unique serial number on the ATmega328P EEPROM memory of an OWHL. The sketch only needs to be uploaded to the OWHL once to store the serial number. The main OWHL.ino program can retrieve this serial number and record it in every output data file. 
+* `serial_number_generator/` - This directory contains an Arduino sketch that can be used to generate and store a unique serial number on the ATmega328P EEPROM memory of an OWHL. The sketch only needs to be uploaded to the OWHL once to store the serial number. The main OWHL.ino program can retrieve this serial number and record it in every output data file. 
 
-* settings_txt_example - This directory contains a sample settings.txt file that could be loaded on a SD card and read when the OWHL first starts up. 
+* `settings_txt_example/` - This directory contains a sample settings.txt file that could be loaded on a SD card and read when the OWHL first starts up. 
 
 ### External libraries
 To make the OWHL run properly, you need to install one of the 
-MS5803 pressure sensor libraries I have written. They are 
-contained in separate repositories for each model. Choose 
+MS5803 pressure sensor libraries. They are 
+contained in separate repositories for each sensor model. Choose 
 the appropriate repository that matches your sensor's pressure
 range, and install the library contents in the `Arduino/libraries/`
-directory.
+directory. The standard choice for an OWHL would be the MS5803-14BA
+model (14 bar maximum pressure). 
 
 * MS5803-01BA: http://github.com/millerlp/MS5803_01 
 * MS5803-02BA: http://github.com/millerlp/MS5803_02 
