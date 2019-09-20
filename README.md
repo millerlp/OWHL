@@ -21,11 +21,19 @@ file. On Windows, this file is found in the arduino installation folder, for exa
 
 * `Eagle_files/` - This directory contains Eagle CAD designs for the 
 OWHL printed circuit boards. Revision C is the current version (circa mid-2016) and is not 
-physically compatible with the earlier revisions. The same software works on all hardware versions.
+    physically compatible with the earlier revisions. The same software works on all hardware versions.
 
 * `R_files/OWHL/` - R scripts for dealing with OWHL data files. Also see the `oceanwaves` repository at http://github.com/millerlp/oceanwaves for more information on processing OWHL pressure data into statistical summaries of wave climate.
 
 * `serial_number_generator/` - This directory contains an Arduino sketch that can be used to generate and store a unique serial number on the ATmega328P EEPROM memory of an OWHL. The sketch only needs to be uploaded to the OWHL once to store the serial number. The main OWHL.ino program can retrieve this serial number and record it in every output data file. 
+
+* `settime_Serial/` - This directory contains an Arduino sketch used to 
+    set the DS3231S real time clock on an OWHL. Use the Arduino software
+    to upload this sketch to an OWHL, and open the Serial Monitor to
+    type in the current date and time to be programmed to the clock chip.
+    The clock should be set before loading the main OWHL.ino program on 
+    the OWHL. We recommend always setting the date and time using the
+    current values in the UTC time zone.
 
 * `settings_txt_example/` - This directory contains a sample settings.txt file that could be loaded on a SD card and read when the OWHL first starts up. 
 
