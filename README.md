@@ -23,8 +23,6 @@ file. On Windows, this file is found in the arduino installation folder, for exa
 OWHL printed circuit boards. Revision C is the current version (circa mid-2016) and is not 
     physically compatible with the earlier revisions. The same software works on all hardware versions.
 
-* `R_files/OWHL/` - R scripts for dealing with OWHL data files. Also see the `oceanwaves` repository at http://github.com/millerlp/oceanwaves for more information on processing OWHL pressure data into statistical summaries of wave climate.
-
 * `serial_number_generator/` - This directory contains an Arduino sketch that can be used to generate and store a unique serial number on the ATmega328P EEPROM memory of an OWHL. The sketch only needs to be uploaded to the OWHL once to store the serial number. The main OWHL.ino program can retrieve this serial number and record it in every output data file. This directory should be placed in your
     Arduino folder where your other sketches are normally stored.
 
@@ -58,13 +56,18 @@ You also need the real time clock library and SdFat library.
 * SdFat: https://github.com/greiman/SdFat
 
 You must set the real time clock chip, DS3231, on the OWHL before attempting
-to upload the OWHL.ino program and collect data. 
+to upload the `OWHL.ino` program and collect data. 
 
 To set the real time clock, look in the examples folder of RTClib and
-use the settime_Serial.ino sketch. Load that sketch onto the OWHL. Open the
+use the `settime_Serial.ino` sketch (also found in the `settime_Serial/` 
+directory here). Load that sketch onto the OWHL. Open the
 Arduino Serial Monitor window (use the 57600 baud speed setting) and enter the 
 date and time, then hit enter to
 write the values to the DS3231 clock chip. You can then load the main 
 OWHL.ino sketch onto the OWHL to log data.  
+
+
+## Processing OWHL pressure data into wave statistics
+See the `oceanwaves` repository at http://github.com/millerlp/oceanwaves for more information on processing OWHL pressure data into statistical summaries of wave climate.
 
 Developed under Arduino v1.0.5-r2, rewritten to work with Arduino v1.6.6
