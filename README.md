@@ -67,7 +67,22 @@ write the values to the DS3231 clock chip. You can then load the main
 OWHL.ino sketch onto the OWHL to log data.  
 
 
-## Processing OWHL pressure data into wave statistics
-See the `oceanwaves` repository at http://github.com/millerlp/oceanwaves for more information on processing OWHL pressure data into statistical summaries of wave climate.
+## External information
+
+### Assembling OWHL electronics
+
+An assembly video for OWHL Revision C hardware is found here: https://www.youtube.com/watch?v=M5sTpZUhfrg
+
+### Processing OWHL pressure data into wave statistics
+
+See the following 2 R packages for help with converting OWHL pressure data into wave height statistics. R is an 
+open source statistical program. Both packages contain instructional vignettes that explain their operation and
+the general workflow for processing subsurface pressure sensor data into wave data. 
+
+* `owhlR`: https://github.com/millerlp/owhlR
+
+* `oceanwaves`: https://cran.r-project.org/package=oceanwaves
+
+
 
 Developed under Arduino v1.0.5-r2, rewritten to work with Arduino v1.6.6
