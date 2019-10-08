@@ -1,5 +1,7 @@
 ## OWHL - Open Wave Height Logger
 
+<img align="right" src="/img/RevC_stack.jpg">
+
 The code in this repository runs a pressure sensor data logger 
 that can be used to log wave heights over long periods of time (continuous running of up to 1 year on a set of D-cell alkaline batteries). 
 It is meant to be placed in 5-10m of water, where it then records 
