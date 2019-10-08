@@ -1,0 +1,4 @@
+MS5803 PCB Schematic Label,Part Description,Manufacturer,Mfr. Part Number,Quantity,digikey.com PN,newark.com PN,mouser.com PN,
+"SPI_HDR, I2C_HDR, FTDI_HDR",Female header (short tail for MS5803 disc),Sullins Connector Solutions,PPTC061LFBN-RC,3,S7004-ND,BG095-06-A-N-D,,
+U1,MS5803-14BA pressure sensor,Measurement Specialities,MS5803-14BA,1,223-1626-5-ND,03AC1591,824-MS580314BA01-00,
+C5,"Capacitor, surface mount 0805 0.1uF 10V ceramic",Taiyo Yuden,LMK212SD104KG-T,1,587-1134-1-ND,84R9733,963-LMK212SD104KG-T,

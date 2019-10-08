@@ -1,0 +1,17 @@
+Power PCB Schematic Label,Part Description,Manufacturer,Mfr. Part Number,Quantity,digikey.com PN,newark.com PN,mouser.com PN
+LED1,"RED LED, surface mount 0805, 1.8V forward voltage",Lite-On,LTST-C171KRKT,1,160-1427-1-ND,75R0581,859-LTST-C171KRKT
+LED2,"GREEN LED, surface mount 0805, 2.1V",Lite-On,LTST-C171GKT,1,160-1423-1-ND,75R0587,859-LTST-C171GKT
+"C3, C4","Capacitor, surface mount 1uF 35V, electrolytic, Panasonic FC series, size code B",Panasonic,EEE-FC1V1R0R,2,PCE4024CT-ND,53W3651,667-EEE-FC1V1R0R
+C1,"Capacitor, 22µF Tanatalum polarized 0805",AVX Corp,F920J226MPA,1,478-8119-1-ND,55AC2222,647-F920J226MPA
+"R7,R8","Resistor, surface-mount, 510 ohm, 1/8watt, 5%",Panasonic,ERJ-6GEYJ511V,2,P510ACT-ND,65T8831,667-ERJ-6GEYJ511V
+"R1,R2","Resistor, surface-mount, 100k ohm 1/8watt 5% for SD card pull ups",Panasonic,ERJ-6GEYJ104V,2,P100KACT-ND,65T8779,667-ERJ-6GEYJ104V
+"U$1, U$2, U$5, U$6","JST PH series vertical 2-pin male header, SMD, 2mm spacing",JST,B2B-PH-SM4-TB,1,455-1734-6-ND,37K9941,
+VREG,MCP1700T-3002E/TT 3.0V Regulator Surface-mount SOT-23-3,Microchip,MCP1700T-3002E/TT,1,MCP1700T-3002E/TTCT-ND,84R5176,579-MCP1700T3002E/TT
+"RESET, BUTTON1","pushbutton, surface-mount",Omron,B3S-1000P,2,SW836CT-ND,52F3560,653-B3S-1000P
+U$2,"MicroSD card slot, reverse mount",Molex,5027740891,1,WM24066CT-ND,71T7280,538-502774-0891
+"SPI_HDR, I2C_HDR, FTDI_HDR",Female wire wrap headers (long-tail stacking headers for CPU + POWER discs) 10mm tail length,Samtec,SSQ-106-03-G-S,3,SAM1198-06-ND,11P8269,200-SSQ10603GS
+,"JST PH series 2-pin female connector, 2mm spacing",JST,PHR-2,1,455-1165-ND,28C6963,
+,"JST PH series  crimp-on terminal for female connector housing, 24-30 AWG",JST,SPH-002T-P0.5S,6,455-1127-1-ND,28C6968,
+,,,,,,,
+,,,,,,,
+,,,,,,,
