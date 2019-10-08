@@ -96,7 +96,7 @@ boards (in a minimum batch of 3 per board) from these links:
 * OWHL CPU board: https://oshpark.com/shared_projects/BKAWGvvS
 * OWHL MS5803 board: https://oshpark.com/shared_projects/Zr2csAMy
 * OWHL drill template (optional): https://oshpark.com/shared_projects/QqxQIda4
-
-<img align="center" width="300" height="300" src="/img/RevC_four_pcbs.jpg">
-
+<p align="center">
+<img  width="300" height="300" src="/img/RevC_four_pcbs.jpg">
+</p>
 Developed under Arduino v1.0.5-r2, rewritten to work with Arduino v1.6.6
