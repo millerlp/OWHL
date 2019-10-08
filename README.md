@@ -20,8 +20,10 @@ should be copied and pasted into the standard Arduino `boards.txt`
 file. On Windows, this file is found in the arduino installation folder, for example:`arduino-1.6.4/hardware/arduino/avr/boards.txt`. On Mac OS X, this file is found by going to your Applications folder, long-clicking on Arduino.app, and choosing "Show package contents". Then in the Contents folder that opens up, go to `Contents/Java/hardware/arduino/avr/boards.txt`.
 
 * `Eagle_files/` - This directory contains Eagle CAD designs for the 
-OWHL printed circuit boards. Revision C is the current version (circa mid-2016) and is not 
-    physically compatible with the earlier revisions. The same software works on all hardware versions.
+OWHL printed circuit boards, along with Gerber files that can be used to order (bare) circuit boards from online
+suppliers.  Revision C is the current version (circa 2016-2019) and is not 
+    physically compatible with the earlier revisions. The same software works on all hardware versions. An Excel parts list
+	file `OWHL_RevC_parts_simplified_20191001.xlsx` can also be found in the `OWHL_revC` subdirectory.
 
 * `serial_number_generator/` - This directory contains an Arduino sketch that can be used to generate and store a unique serial number on the ATmega328P EEPROM memory of an OWHL. The sketch only needs to be uploaded to the OWHL once to store the serial number. The main OWHL.ino program can retrieve this serial number and record it in every output data file. This directory should be placed in your
     Arduino folder where your other sketches are normally stored.
@@ -83,6 +85,15 @@ the general workflow for processing subsurface pressure sensor data into wave da
 
 * `oceanwaves`: https://cran.r-project.org/package=oceanwaves
 
+### Ordering bare circuit boards
+
+If you don't want to deal with the circuit board design files, you can directly order copies of each of the OWHL circuit
+boards (in a minimum batch of 3 per board) from these links:
+
+* OWHL Power board: https://oshpark.com/shared_projects/ROmwZlFP
+* OWHL CPU board: https://oshpark.com/shared_projects/BKAWGvvS
+* OWHL MS5803 board: https://oshpark.com/shared_projects/Zr2csAMy
+* OWHL drill template (optional): https://oshpark.com/shared_projects/QqxQIda4
 
 
 Developed under Arduino v1.0.5-r2, rewritten to work with Arduino v1.6.6
