@@ -75,7 +75,7 @@ OWHL.ino sketch onto the OWHL to log data.
 
 ### Assembling OWHL electronics
 
-An assembly video for OWHL Revision C hardware is found here: https://www.youtube.com/watch?v=M5sTpZUhfrg
+An assembly video for OWHL Revision C hardware is found here: https://youtu.be/y3US9D-5TtE or in a permanent archive here: http://doi.org/10.5281/zenodo.3679029
 
 ### Processing OWHL pressure data into wave statistics
 
