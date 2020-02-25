@@ -248,7 +248,7 @@ void setup() {
 	// often come up with a 2000-01-01 date. Alternatively, if the year
   // returns as 2165, it indicates a communication problem
   // usually due to bad wiring or a solder bridge between 2 pins. 
-	if (starttime.year() < 2019 | starttime.year() >= 2165){
+	if ( (starttime.year() < 2020) | (starttime.year() >= 2165) ){
 		digitalWrite(ERRLED, HIGH);
 		frequency = 3000;
 		while(1){ // infinite loop due to RTC initialization error
@@ -362,7 +362,7 @@ void setup() {
 		// set f_wdt flag to 1 so we start taking data in the main loop
 		f_wdt = 1;
 		
-	} else if (newtime.minute() < startMinute | newtime.minute() > endMinute){
+	} else if ( (newtime.minute() < startMinute) | (newtime.minute() > endMinute) ){
 		// The current minute is earlier or later in the hour than the user has 
 		// specified for taking data.
 		oldtime = newtime;
@@ -1028,7 +1028,6 @@ void heartBeat(void){
 					attachInterrupt(1, heartBeatInterrupt, LOW);
 					heartBeatCount = 0;
 				}
-				heartBeatCount; // return value
 }
 
 //-------------------------------------------------------------------------
@@ -1332,7 +1331,3 @@ void printTime(DateTime now){
 	// int v;
 	// return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
 // }
-
-
-
-
