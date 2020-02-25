@@ -449,8 +449,10 @@ void loop() {
 				writeToSD();
 #ifdef ECHO_TO_SERIAL
 				printTime(newtime);
-				Serial.print("\t");
-				Serial.println(sensor.pressure());
+				Serial.print(F("\t"));
+				Serial.print(sensor.pressure());
+        Serial.print(F(" mbar\tTemp: "));
+        Serial.println(sensor.temperature());
 				delay(5);
 #endif				
 			} // end of if (loopCount >= (SAMPLES_PER_SECOND - 1))
