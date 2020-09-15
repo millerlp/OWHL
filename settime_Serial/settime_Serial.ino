@@ -56,7 +56,7 @@ uint8_t myminute;
 uint8_t mysec;
 DateTime myTime;
 DateTime currTime; 
-long millisVal;
+unsigned long millisVal;
 
 void setup() {
 	Serial.begin(57600); // adjust your serial monitor baud to 57600 to match
