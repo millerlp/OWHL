@@ -195,6 +195,9 @@ SdFile setfile; // for sd card, this is the settings file to read from
 void setup() {
 	
 	Serial.begin(57600);
+#ifdef ECHO_TO_SERIAL   
+  Serial.println(F("Hello"));
+#endif  
 	pinMode(chipSelect, OUTPUT);  // set chip select pin for SD card to output
 	// Set indicator LEDs as output
 	pinMode(LED, OUTPUT);
@@ -232,6 +235,9 @@ void setup() {
 	if (! RTC.isrunning()) {
 		digitalWrite(ERRLED, HIGH);
 		frequency = 2000;
+#ifdef ECHO_TO_SERIAL 
+  Serial.println(F("Clock not running"));
+#endif  
 		while(1){ // infinite loop due to RTC initialization error
 				digitalWrite(LED, HIGH);
 				delay(400);
@@ -248,9 +254,12 @@ void setup() {
 	// often come up with a 2000-01-01 date. Alternatively, if the year
   // returns as 2165, it indicates a communication problem
   // usually due to bad wiring or a solder bridge between 2 pins. 
-	if ( (starttime.year() < 2020) | (starttime.year() >= 2165) ){
+	if ( (starttime.year() < 2021) | (starttime.year() >= 2165) ){
 		digitalWrite(ERRLED, HIGH);
 		frequency = 3000;
+ #ifdef ECHO_TO_SERIAL 
+  Serial.println(F("Reset clock"));
+#endif  
 		while(1){ // infinite loop due to RTC initialization error
 				digitalWrite(LED, HIGH);
 				delay(400);
@@ -282,6 +291,9 @@ void setup() {
 	// If the above statement returns FALSE after trying to 
 	// initialize the card, enter into this section and
 	// hold in an infinite loop.
+#ifdef ECHO_TO_SERIAL 
+  Serial.println(F("SD card error"));
+#endif  
 		while(1){ // infinite loop due to SD card initialization error
                         digitalWrite(ERRLED, HIGH);
                         delay(100);
