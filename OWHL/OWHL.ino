@@ -2,7 +2,7 @@
  * 
 	
 	OWHL - Open Wave Height Logger
-	Copyright (C) 2014  Luke Miller
+	Copyright (C) 2014-2021  Luke Miller
 	
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 	along with this program.  If not, see http://www.gnu.org/licenses/
 	
 	Written under Arduino 1.0.5-r2
-	Updated to run under Arduino 1.6.4
+	Updated to run under Arduino 1.6.4, tested under 1.8.13 most recently
 	https://github.com/millerlp/OWHL 
   -------------------------------------------------------------------
   The sketch:
