@@ -73,6 +73,9 @@ OWHL.ino sketch onto the OWHL to log data.
 
 ## External information
 
+### OWHL journal article
+A open-access peer-reviewed article detailing the design and testing of the OWHL has been published in Limnology and Oceanography: Methods (Lyman et al. 2020). You can access the article for free here: http://dx.doi.org/10.1002/lom3.10370 
+
 ### Assembling OWHL electronics
 
 An assembly video for OWHL Revision C hardware is found here: https://youtu.be/N2AALRY_woE or in a permanent archive here: http://doi.org/10.5281/zenodo.3679029
