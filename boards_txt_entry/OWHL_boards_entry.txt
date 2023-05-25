@@ -1,5 +1,6 @@
 ################################################################
 ## Added by LPM 2015-05-22
+# Updated 2023-05-24
 # For Arduino IDE v 1.6.3 or later
 # Tested successfully using Arduino as ISP programmer to burn
 # bootloader on OWHL.
@@ -9,7 +10,8 @@
 # Arduino IDE menu under Tools>Board>
 
 OWHLatmega328.name=OWHL (8 MHz internal clock)
-OWHLatmega328.upload.tool=arduino:avrdude
+OOWHLatmega328.upload.tool=avrdude
+OWHLatmega328.upload.tool.default=avrdude
 OWHLatmega328.upload.protocol=arduino
 OWHLatmega328.upload.maximum_size=30720
 OWHLatmega328.upload.speed=57600
