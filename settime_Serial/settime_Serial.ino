@@ -20,7 +20,11 @@
 	uploaded immediately, and the result will be printed to the
 	serial monitor. If you miss your time, you can enter a 
 	new date and time in the same format and try again without
-	needing to reboot. 
+	needing to reboot. Generally it is recommended to set
+	your time and date for the UTC time zone (a.k.a. Greenwich 
+	Mean Time) for consistency and to avoid nasty issues with 
+	time zone conversions and daylight savings time changes
+	during subsequent data analysis. 
 
 */
 
@@ -56,7 +60,7 @@ uint8_t myminute;
 uint8_t mysec;
 DateTime myTime;
 DateTime currTime; 
-unsigned long millisVal;
+long millisVal;
 
 void setup() {
 	Serial.begin(57600); // adjust your serial monitor baud to 57600 to match
@@ -82,8 +86,9 @@ void loop() {
 		millisVal = millis(); // update millisVal
 		currTime = rtc.now(); // read current time from the rtc
 		Serial.print(F("RTC time: "));
-		char buf[20]; // create a character array to hold the time as a string
-		Serial.println(currTime.toString(buf,21)); // print the time as a string
+		
+    char buf[] = "YYYY-MM-DD hh:mm:ss";  // create a character array to hold the time as a string
+		Serial.println(currTime.toString(buf)); // print the time as a string
 	}
 	// When the user has entered a date and time value in the serial 
 	// monitor and hit enter, the following section will execute.
