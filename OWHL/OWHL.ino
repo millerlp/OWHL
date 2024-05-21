@@ -2,7 +2,7 @@
  * 
 	
 	OWHL - Open Wave Height Logger
-	Copyright (C) 2014-2021  Luke Miller
+	Copyright (C) 2014-2024  Luke Miller
 	
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -17,8 +17,9 @@
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see http://www.gnu.org/licenses/
 	
-	Written under Arduino 1.0.5-r2
-	Updated to run under Arduino 1.6.4, tested under 1.8.13 most recently
+	Originally written under Arduino 1.0.5-r2
+	Updated to run under Arduino 1.6.4, tested under 1.8.19 most recently
+  Updated to work with more recent versions of RTClib (post 2022)
 	https://github.com/millerlp/OWHL 
   -------------------------------------------------------------------
   The sketch:
@@ -230,22 +231,7 @@ void setup() {
 	// the sketch gettime.ino for reading out the clock time via serial 
 	// monitor. 
 	Wire.begin();
-	RTC.begin(); // Start DS3231 real time clock
-	// Check to see if DS3231 RTC is running
-	if (! RTC.isrunning()) {
-		digitalWrite(ERRLED, HIGH);
-		frequency = 2000;
-#ifdef ECHO_TO_SERIAL 
-  Serial.println(F("Clock not running"));
-#endif  
-		while(1){ // infinite loop due to RTC initialization error
-				digitalWrite(LED, HIGH);
-				delay(400);
-				digitalWrite(LED, LOW);
-				delay(400);
-				beepbuzzer();
-		}
-	} 
+	RTC.begin(); // Start DS3231 real time clock 
 	DateTime starttime = RTC.now(); // get initial time
 	// Perform a second simple check to see if the running clock
 	// is out of date. A running clock that has not been properly 
@@ -254,7 +240,7 @@ void setup() {
 	// often come up with a 2000-01-01 date. Alternatively, if the year
   // returns as 2165, it indicates a communication problem
   // usually due to bad wiring or a solder bridge between 2 pins. 
-	if ( (starttime.year() < 2021) | (starttime.year() >= 2165) ){
+	if ( (starttime.year() < 2024) | (starttime.year() >= 2165) ){
 		digitalWrite(ERRLED, HIGH);
 		frequency = 3000;
  #ifdef ECHO_TO_SERIAL 
@@ -269,13 +255,14 @@ void setup() {
 		}
 	}
 
-	RTC.enable32kHz(false); // Stop 32.768kHz output from DS3231 for now
+	RTC.disable32K(); // Stop 32.768kHz output from DS3231 for now
 	
 	// The DS3231 can also put out several different square waves
 	// on its SQW pin (1024, 4096, 8192 Hz), though I don't use them
 	// in this sketch. The code below disables the SQW output to make
 	// sure it's not using any extra power.
-	RTC.enableOscillator(true, false, 0);
+//	RTC.enableOscillator(true, false, 0);
+  RTC.writeSqwPinMode(DS3231_OFF);  // turn off SQW pin
 
 #ifdef ECHO_TO_SERIAL	
 	// Print time to serial monitor. 
@@ -510,7 +497,7 @@ void loop() {
 				}
 				TIMSK2 = 0; // stop TIMER2 interrupts
 				// Turn off the RTC's 32.768kHz clock signal
-				RTC.enable32kHz(false);
+				RTC.disable32K();
 				// Go into low power sleep mode with watchdog timer
 				lowPowerSleep();
 				// From here, f_wdt will be set to 2 on interrupt from the
@@ -530,7 +517,7 @@ void loop() {
 			TIMSK2 = 0; // stop TIMER2 interrupts
 			// If we are past endMinute, enter lowPowerSleep (shuts off TIMER2)
 			// Turn off the RTC's 32.768kHz clock signal
-			RTC.enable32kHz(false);
+			RTC.disable32K();
 			// Go into low power sleep mode with watchdog timer
 			// The watchdog interrupt will return f_wdt = 2 after this point
 			lowPowerSleep();
@@ -742,7 +729,7 @@ ISR(WDT_vect) {
 DateTime startTIMER2(DateTime currTime){
 	TIMSK2 = 0; // stop timer 2 interrupts
 
-	RTC.enable32kHz(true);
+	RTC.enable32K();
 	ASSR = _BV(EXCLK); // Set EXCLK external clock bit in ASSR register
 	// The EXCLK bit should only be set if you're trying to feed the
 	// 32.768 clock signal from the Chronodot into XTAL1. 
@@ -981,7 +968,7 @@ void endRun ()
 	interrupts(); // reenable global interrupts (including TIMER0 for millis)
 
 	// Turn off the RTC's 32.768kHz clock signal if it's not already off
-	RTC.enable32kHz(false);
+	RTC.disable32K();
 	TIMSK2 = 0; // stop timer 2 interrupts
 
 	// Create a final time stamp for the file's modify date
