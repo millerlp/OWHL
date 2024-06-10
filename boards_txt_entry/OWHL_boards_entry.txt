@@ -10,7 +10,7 @@
 # Arduino IDE menu under Tools>Board>
 
 OWHLatmega328.name=OWHL (8 MHz internal clock)
-OOWHLatmega328.upload.tool=avrdude
+OWHLatmega328.upload.tool=avrdude
 OWHLatmega328.upload.tool.default=avrdude
 OWHLatmega328.upload.protocol=arduino
 OWHLatmega328.upload.maximum_size=30720
@@ -24,6 +24,7 @@ OWHLatmega328.bootloader.file=atmega/ATmegaBOOT_168_atmega328_pro_8MHz.hex
 OWHLatmega328.bootloader.unlock_bits=0x3F
 OWHLatmega328.bootloader.lock_bits=0x0F
 OWHLatmega328.bootloader.tool=arduino:avrdude
+OWHLatmega328.build.board=AVR_PRO
 OWHLatmega328.build.mcu=atmega328p
 OWHLatmega328.build.f_cpu=8000000L
 OWHLatmega328.build.core=arduino
